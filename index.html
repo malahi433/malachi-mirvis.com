@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מלאכי מירוויס</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="theme-color" content="#05080d">
+<meta name="description" content="מלאכי מירוויס · AI · פיתוח תוכנה · יזמות">
+<meta property="og:title" content="מלאכי מירוויס">
+<meta property="og:description" content="AI · פיתוח תוכנה · יזמות">
+<meta property="og:url" content="https://malachi-mirvis.com/">
+<meta property="og:image" content="https://malachi-mirvis.com/profile.png">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* צבעי המותג */
+    --green: #00e676;
+    --blue: #2f80ff;
+    --red: #ff2e55;
+
+    --bg: #05080d;
+    --bg-2: #0b1119;
+    --card: #0d1520;
+    --line: #15222f;
+    --text: #e8f0f7;
+    --muted: #8a9aab;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Heebo", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1;
+    background-image:
+      linear-gradient(rgba(0,230,118,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(47,128,255,.07) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at top, #000 10%, transparent 70%);
+  }
+  .mono { font-family: "JetBrains Mono", monospace; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  a { color: inherit; text-decoration: none; }
+  .g { color: var(--green); } .b { color: var(--blue); } .r { color: var(--red); }
+
+  /* ===== אנימציית פתיחה ===== */
+  #intro {
+    position: fixed; inset: 0; z-index: 100; background: #000;
+    transition: opacity .9s ease, visibility .9s;
+    cursor: pointer;
+  }
+  #intro canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #intro .center {
+    position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  }
+  #intro .title {
+    font-family: "JetBrains Mono", monospace; font-weight: 800;
+    font-size: clamp(1.8rem, 7vw, 4.5rem); letter-spacing: .04em;
+    color: var(--green); text-align: center; direction: ltr;
+    text-shadow: 0 0 18px rgba(0,230,118,.8), 0 0 40px rgba(0,230,118,.4);
+    background: rgba(0,0,0,.55); padding: 10px 26px; border-radius: 12px;
+    opacity: 0; transform: scale(.94); transition: opacity .6s, transform .6s;
+  }
+  #intro .title.on { opacity: 1; transform: none; }
+  #intro .title .cursor { display: inline-block; width: .55em; height: 1em; background: var(--green); vertical-align: -.12em; animation: blink .8s steps(1) infinite; margin-inline-start: 6px; }
+  #intro .skip {
+    position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+    color: rgba(0,230,118,.6); font: 600 .8rem "JetBrains Mono", monospace; letter-spacing: .1em;
+  }
+  #intro.done { opacity: 0; visibility: hidden; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(5,8,13,.82); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+  .logo { font-weight: 800; color: var(--green); direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  .logo .r { color: var(--red); }
+  .links { display: flex; gap: 22px; font-size: .95rem; color: var(--muted); }
+  .links a:hover { color: var(--blue); }
+  .lang {
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    padding: 6px 14px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .85rem;
+  }
+  .lang:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* Hero */
+  header.hero { padding: 110px 0 90px; }
+  .tag { color: var(--red); font-size: .9rem; margin-bottom: 14px; }
+  h1 { font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 800; line-height: 1.15; }
+  h1 .name {
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  h1 .role { display: block; font-size: .55em; font-weight: 600; color: var(--text); margin-top: 10px; }
+  h1 .role::before { content: "> "; color: var(--red); font-family: "JetBrains Mono", monospace; }
+  .hero p.lead { color: var(--muted); font-size: 1.2rem; max-width: 620px; margin: 20px 0 34px; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line);
+    transition: transform .15s, border-color .15s, box-shadow .15s; display: inline-block;
+  }
+  .btn:hover { transform: translateY(-2px); border-color: var(--blue); box-shadow: 0 0 20px rgba(47,128,255,.25); }
+  .btn.primary { background: var(--green); color: #00140a; border-color: var(--green); }
+  .btn.primary:hover { box-shadow: 0 0 24px rgba(0,230,118,.45); }
+
+  /* Sections */
+  section { padding: 70px 0; }
+  h2 { font-size: 1.8rem; margin-bottom: 28px; display: flex; align-items: center; gap: 12px; }
+  h2 .num { color: var(--red); font-size: 1rem; }
+  h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--green), var(--blue), var(--red)); opacity: .45; }
+  [dir="rtl"] h2::after { background: linear-gradient(270deg, var(--green), var(--blue), var(--red)); }
+  .about { display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start; }
+  .about p { color: var(--muted); margin-bottom: 14px; }
+  .avatar {
+    aspect-ratio: 1; border-radius: var(--radius); border: 1px solid var(--line);
+    background:
+      radial-gradient(circle at 30% 20%, rgba(0,230,118,.18), transparent 60%),
+      radial-gradient(circle at 80% 90%, rgba(255,46,85,.15), transparent 55%),
+      linear-gradient(135deg, var(--card), var(--bg-2));
+    display: grid; place-items: center; font: 800 4rem "JetBrains Mono", monospace; color: var(--green);
+    text-shadow: 0 0 20px rgba(0,230,118,.5);
+    overflow: hidden;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar:has(img) { border-color: rgba(47,128,255,.45); box-shadow: 0 0 40px rgba(47,128,255,.25), 0 0 0 1px rgba(0,230,118,.15) inset; }
+
+  /* Edge */
+  .edge { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .edge .item {
+    --c: var(--green);
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; position: relative; overflow: hidden; transition: transform .2s, border-color .2s;
+  }
+  .edge .item::before { content: ""; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 3px; background: var(--c); }
+  .edge .item:hover { transform: translateY(-4px); border-color: var(--c); }
+  .edge .k { font: 800 .8rem "JetBrains Mono", monospace; color: var(--c); letter-spacing: .08em; }
+  .edge h3 { font-size: 1.15rem; margin: 6px 0 8px; }
+  .edge p { color: var(--muted); font-size: .95rem; }
+  .edge-lead { color: var(--muted); max-width: 680px; margin: -8px 0 26px; font-size: 1.05rem; }
+
+  .skills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { padding: 8px 16px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: .9rem; }
+  .chip:nth-child(3n+1) { color: var(--green); } .chip:nth-child(3n+2) { color: var(--blue); } .chip:nth-child(3n) { color: var(--red); }
+
+  .timeline { border-inline-start: 2px solid var(--line); padding-inline-start: 24px; }
+  .job { position: relative; margin-bottom: 34px; }
+  .job::before {
+    content: ""; position: absolute; inset-inline-start: -31px; top: 8px;
+    width: 12px; height: 12px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 0 4px rgba(0,230,118,.15);
+  }
+  .job .when { color: var(--red); font-size: .85rem; }
+  .job h3 { font-size: 1.15rem; }
+  .job .where { color: var(--blue); }
+  .job p { color: var(--muted); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px; transition: transform .2s, border-color .2s; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--blue); }
+  .card h3 { font-size: 1.15rem; }
+  .card p { color: var(--muted); flex: 1; }
+  .card .stack { display: flex; flex-wrap: wrap; gap: 8px; font-size: .78rem; color: var(--green); }
+
+  .contact { text-align: center; }
+  .contact p { color: var(--muted); max-width: 520px; margin: 0 auto 26px; }
+
+  /* אייקונים */
+  .icons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .icons a {
+    --c: var(--green);
+    width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center;
+    background: var(--card); border: 1px solid var(--line); color: var(--c);
+    transition: transform .2s, color .2s, border-color .2s, box-shadow .2s;
+  }
+  .icons a:hover { color: var(--c); border-color: var(--c); transform: translateY(-3px); box-shadow: 0 0 18px color-mix(in srgb, var(--c) 40%, transparent); }
+  .icons svg { width: 24px; height: 24px; }
+  .icons a[title="LinkedIn"] svg { border-radius: 3px; }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 44px 0 36px; border-top: 1px solid var(--line); }
+  footer .icons { margin-bottom: 22px; }
+  footer .brandline { height: 3px; width: 120px; margin: 0 auto 18px; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--blue), var(--red)); }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .6s, transform .6s; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 760px) {
+    .links { display: none; }
+    .about { grid-template-columns: 1fr; }
+    .avatar { max-width: 220px; }
+    header.hero { padding: 70px 0 50px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #intro { display: none; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="intro" aria-hidden="true">
+  <canvas id="matrix"></canvas>
+  <div class="center"><div class="title" id="introTitle"><span id="introText"></span><span class="cursor"></span></div></div>
+  <div class="skip" id="introSkip">CLICK TO SKIP</div>
+</div>
+
+<nav>
+  <div class="wrap">
+    <a href="#top" class="logo mono"><span class="r">&lt;</span><span data-k="logo"></span><span class="r"> /&gt;</span></a>
+    <div class="links">
+      <a href="#about" data-k="nav.about"></a>
+      <a href="#edge" data-k="nav.edge"></a>
+      <a href="#skills" data-k="nav.skills"></a>
+      <a href="#experience" data-k="nav.experience"></a>
+      <a href="#projects" data-k="nav.projects"></a>
+      <a href="#contact" data-k="nav.contact"></a>
+    </div>
+    <button class="lang mono" id="langBtn"></button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="tag mono" data-k="hero.hello"></div>
+    <h1><span class="name" data-k="hero.name"></span><span class="role" data-k="hero.role"></span></h1>
+    <p class="lead" data-k="hero.lead"></p>
+    <div class="btns">
+      <a class="btn primary" href="#edge" data-k="hero.cta1"></a>
+      <a class="btn" href="#contact" data-k="hero.cta2"></a>
+    </div>
+  </div>
+</header>
+
+<section id="about" class="reveal">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.about"></span></h2>
+    <div class="about">
+      <div id="aboutText"></div>
+      <div class="avatar" id="avatar"></div>
+    </div>
+  </div>
+</section>
+
+<section id="edge" class="reveal">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.edge"></span></h2>
+    <p class="edge-lead" data-k="edgeLead"></p>
+    <div class="edge" id="edgeList"></div>
+  </div>
+</section>
+
+<section id="skills" class="reveal">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.skills"></span></h2>
+    <div class="skills" id="skillsList"></div>
+  </div>
+</section>
+
+<section id="experience" class="reveal">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.experience"></span></h2>
+    <div class="timeline" id="jobs"></div>
+  </div>
+</section>
+
+<section id="projects" class="reveal">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.projects"></span></h2>
+    <div class="grid" id="projectsGrid"></div>
+  </div>
+</section>
+
+<section id="contact" class="reveal contact">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.contact"></span></h2>
+    <p data-k="contact.text"></p>
+    <div class="icons" id="contactIcons"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="icons" id="footerIcons"></div>
+    <div class="brandline"></div>
+    <span data-k="hero.name"></span> · <span id="year"></span>
+  </div>
+</footer>
+
+<script>
+/* ===== כאן עורכים את התוכן של האתר ===== */
+const PROFILE = {
+  initials: "MM",          // מוצג אם אין תמונה
+  photo: "",               // תמונה בתוך האתר (ריק = ראשי תיבות)
+  skills: [],              // רשימה ריקה = האזור מוסתר
+  // אייקוני יצירת קשר (מופיעים באזור "צור קשר" ובתחתית האתר)
+  contacts: [
+    { icon: "x",        label: "X",        url: "https://x.com/MalachiMirvis",                            color: "#ffffff" },
+    { icon: "mail",     label: "Gmail",    url: "mailto:malahimirvis@gmail.com",                         color: "#ea4335" },
+    { icon: "whatsapp", label: "WhatsApp", url: "https://wa.me/972533884902",                            color: "#25d366" },
+    { icon: "phone",    label: "Phone",    url: "tel:+972533884902",                                     color: "#34c759" },
+    { icon: "linkedin", label: "LinkedIn", url: "https://www.linkedin.com/in/malachi-mirvis-276556274/", color: "#0a66c2" },
+    { icon: "github",   label: "GitHub",   url: "https://github.com/malahi433/",                          color: "#ffffff" },
+  ],
+};
+
+const TEXT = {
+  he: {
+    logo: "מלאכי",
+    nav: { about: "עליי", edge: "ה-Edge שלי", skills: "כישורים", experience: "ניסיון", projects: "פרויקטים", contact: "צור קשר" },
+    hero: {
+      hello: "// שלום, אני",
+      name: "מלאכי מירוויס",
+      role: "AI · פיתוח תוכנה · יזמות",
+      lead: "משלב בינה מלאכותית ופיתוח תוכנה כדי להפוך רעיונות למוצרים שעובדים. גר בבאר שבע ופתוח להזדמנויות באזור חיפה או מרחוק.",
+      cta1: "ה-Edge שלי", cta2: "בואו נדבר",
+    },
+    about: [
+      "אני מלאכי מירוויס, מבאר שבע. אני חי בצומת שבין בינה מלאכותית לפיתוח תוכנה, ואוהב לקחת רעיון ולהביא אותו לחיים.",
+      "אני פתוח להזדמנויות עבודה באזור חיפה, במשרה במשרד, היברידית או מהבית. אשמח לשמוע על תפקידים ופרויקטים מעניינים.",
+    ],
+    edgeLead: "מה אני מביא איתי לכל צוות ולכל פרויקט:",
+    edge: [
+      { k: "01 / AI",    t: "בינה מלאכותית",        d: "עובד עם כלי AI ומודלים כדי לבנות פתרונות חכמים ולחסוך זמן ועבודה ידנית." },
+      { k: "02 / CODE",  t: "פיתוח תוכנה",           d: "בונה אתרים, אפליקציות וכלים מהרעיון ועד למוצר שעולה לאוויר." },
+      { k: "03 / LEARN", t: "למידה מהירה",           d: "קולט טכנולוגיות וכלים חדשים מהר, ומתחיל לעבוד איתם כמעט מיד." },
+      { k: "04 / BUILD", t: "יזמות ופתרון בעיות",    d: "מזהה בעיה, חושב על פתרון ודוחף אותו קדימה עד שהוא עובד." },
+    ],
+    jobs: [],
+    projects: [],
+    contact: { text: "מחפשים מישהו לצוות? אשמח לשמוע. אפשר ליצור איתי קשר בכל אחת מהדרכים כאן." },
+    langBtn: "EN",
+    view: "לצפייה ←",
+  },
+  en: {
+    logo: "Malachi",
+    nav: { about: "About", edge: "My Edge", skills: "Skills", experience: "Experience", projects: "Projects", contact: "Contact" },
+    hero: {
+      hello: "// Hi, I'm",
+      name: "Malachi Mirvis",
+      role: "AI · Software · Entrepreneurship",
+      lead: "I combine AI and software development to turn ideas into products that work. Based in Be'er Sheva, open to roles in the Haifa area or remote.",
+      cta1: "My Edge", cta2: "Let's talk",
+    },
+    about: [
+      "I'm Malachi Mirvis, from Be'er Sheva, Israel. I live where AI meets software development, and I love taking an idea and bringing it to life.",
+      "I'm open to work in the Haifa area, on-site, hybrid or remote, and happy to hear about interesting roles and projects.",
+    ],
+    edgeLead: "What I bring to every team and project:",
+    edge: [
+      { k: "01 / AI",    t: "Artificial Intelligence",       d: "I work with AI tools and models to build smart solutions and cut manual work." },
+      { k: "02 / CODE",  t: "Software Development",          d: "I build websites, apps and tools, from the idea to a live product." },
+      { k: "03 / LEARN", t: "Fast Learner",                  d: "I pick up new technologies and tools quickly and put them to work right away." },
+      { k: "04 / BUILD", t: "Entrepreneurship & Problem Solving", d: "I spot a problem, design a fix and push it forward until it works." },
+    ],
+    jobs: [],
+    projects: [],
+    contact: { text: "Looking for someone to join your team? I'd love to hear from you. Reach me any of these ways." },
+    langBtn: "עב",
+    view: "View →",
+  },
+};
+/* ===== סוף אזור העריכה ===== */
+
+const ICONS = {
+  x: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+  // לוגו Gmail המקורי בארבעה צבעים
+  mail: '<svg viewBox="52 42 88 66"><path fill="#4285f4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6"/><path fill="#34a853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15"/><path fill="#fbbc04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2"/><path fill="#ea4335" d="M72 74V48l24 18 24-18v26L96 92"/><path fill="#c5221f" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2"/></svg>',
+  whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>',
+  github: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>',
+  linkedin: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
+};
+
+const get = (obj, path) => path.split(".").reduce((o, k) => o && o[k], obj);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function iconLinks() {
+  return PROFILE.contacts.map(c => {
+    const ext = c.url.startsWith("http");
+    return `<a href="${esc(c.url)}" style="--c:${c.color}" aria-label="${esc(c.label)}" title="${esc(c.label)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${ICONS[c.icon]}</a>`;
+  }).join("");
+}
+
+function render(lang) {
+  const t = TEXT[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "he" ? "rtl" : "ltr";
+  document.title = t.hero.name;
+  document.querySelectorAll("[data-k]").forEach(el => { el.textContent = get(t, el.dataset.k); });
+  document.getElementById("langBtn").textContent = t.langBtn;
+
+  document.getElementById("aboutText").innerHTML = t.about.map(p => `<p>${esc(p)}</p>`).join("");
+  document.getElementById("avatar").innerHTML = PROFILE.photo
+    ? `<img src="${esc(PROFILE.photo)}" alt="${esc(t.hero.name)}">`
+    : esc(PROFILE.initials);
+  const edgeColors = ["var(--green)", "var(--blue)", "var(--red)", "var(--green)"];
+  document.getElementById("edgeList").innerHTML = t.edge.map((e, i) => `
+    <div class="item" style="--c:${edgeColors[i % 4]}">
+      <div class="k">${esc(e.k)}</div>
+      <h3>${esc(e.t)}</h3>
+      <p>${esc(e.d)}</p>
+    </div>`).join("");
+  document.getElementById("skillsList").innerHTML = PROFILE.skills.map(s => `<span class="chip mono">${esc(s)}</span>`).join("");
+  document.getElementById("jobs").innerHTML = t.jobs.map(j => `
+    <div class="job">
+      <div class="when mono">${esc(j.when)}</div>
+      <h3>${esc(j.title)} · <span class="where">${esc(j.where)}</span></h3>
+      <p>${esc(j.desc)}</p>
+    </div>`).join("");
+  document.getElementById("projectsGrid").innerHTML = t.projects.map(p => `
+    <a class="card" href="${esc(p.url)}" target="_blank" rel="noopener">
+      <h3>${esc(p.title)}</h3>
+      <p>${esc(p.desc)}</p>
+      <div class="stack mono">${p.stack.map(s => `<span>${esc(s)}</span>`).join("")}</div>
+      <span class="mono" style="color:var(--blue);font-size:.85rem">${esc(t.view)}</span>
+    </a>`).join("");
+  document.getElementById("contactIcons").innerHTML = iconLinks();
+  document.getElementById("footerIcons").innerHTML = iconLinks();
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // הסתרת אזורים ריקים (וגם הקישור אליהם בתפריט)
+  const has = { skills: PROFILE.skills.length, experience: t.jobs.length, projects: t.projects.length };
+  let n = 1;
+  ["about", "edge", "skills", "experience", "projects", "contact"].forEach(id => {
+    const show = !(id in has) || has[id] > 0;
+    document.getElementById(id).style.display = show ? "" : "none";
+    document.querySelector(`.links a[href="#${id}"]`).style.display = show ? "" : "none";
+    if (show) document.querySelector(`#${id} h2 .num`).textContent = String(n++).padStart(2, "0") + ".";
+  });
+}
+
+let lang = "he";
+try { lang = localStorage.getItem("lang") || "he"; } catch (e) {}
+render(lang);
+document.getElementById("langBtn").onclick = () => {
+  lang = lang === "he" ? "en" : "he";
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  render(lang);
+};
+
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: .1 });
+document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+/* ===== אנימציית פתיחה: 0 ו-1 ירוקים יורדים מלמעלה למטה ===== */
+(function intro() {
+  const intro = document.getElementById("intro");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { intro.remove(); return; }
+  const cv = document.getElementById("matrix"), ctx = cv.getContext("2d");
+  const size = 18;
+  let w, h, cols, drops, speeds, running = true;
+  document.body.style.overflow = "hidden";
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.ceil(w / size);
+    // כל עמודה מתחילה מעל המסך בגובה אקראי, כך שהגשם יורד בהדרגה
+    drops = Array.from({ length: cols }, () => -Math.random() * h * 0.9);
+    speeds = Array.from({ length: cols }, () => 0.6 + Math.random() * 0.9);
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
+  }
+  resize();
+  addEventListener("resize", resize);
+
+  function frame() {
+    if (!running) return;
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = `600 ${size}px "JetBrains Mono", monospace`;
+    for (let i = 0; i < cols; i++) {
+      const ch = Math.random() < 0.5 ? "0" : "1";
+      const x = i * size, y = drops[i];
+      // הראש של כל טור בהיר, והזנב ירוק
+      ctx.shadowColor = "#00e676"; ctx.shadowBlur = 8;
+      ctx.fillStyle = "#c8ffe0";
+      ctx.fillText(ch, x, y);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#00e676";
+      ctx.fillText(Math.random() < 0.5 ? "0" : "1", x, y - size);
+      drops[i] += size * speeds[i];
+      if (drops[i] > h + size * 2 && Math.random() > 0.96) drops[i] = -size * Math.random() * 10;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // כיתוב שמוקלד אחרי שהגל מתחיל
+  const title = document.getElementById("introTitle"), txt = document.getElementById("introText");
+  const word = "MALACHI MIRVIS";
+  setTimeout(() => {
+    title.classList.add("on");
+    let k = 0;
+    const typer = setInterval(() => { txt.textContent = word.slice(0, ++k); if (k >= word.length) clearInterval(typer); }, 70);
+  }, 900);
+
+  let closed = false;
+  function close() {
+    if (closed) return; closed = true;
+    intro.classList.add("done");
+    document.body.style.overflow = "";
+    setTimeout(() => { running = false; intro.remove(); }, 950);
+  }
+  setTimeout(close, 4200);
+  intro.addEventListener("click", close);
+  addEventListener("keydown", close, { once: true });
+})();
+</script>
+</body>
+</html>
