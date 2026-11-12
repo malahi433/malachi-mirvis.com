@@ -182,6 +182,40 @@
   .contact p { color: var(--muted); max-width: 520px; margin: 0 auto; }
   #contact { padding-bottom: 40px; }
 
+  /* ===== בועות הכלים ===== */
+  .bubbles {
+    position: relative; height: 560px; margin-top: 8px; overflow: hidden;
+    border-radius: 22px; border: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(0,230,118,.07), transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(47,128,255,.08), transparent 55%),
+      radial-gradient(ellipse at 50% 50%, rgba(255,46,85,.03), transparent 60%),
+      var(--bg-2);
+    touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  }
+  .bubble {
+    --c: #ffffff;
+    position: absolute; left: 0; top: 0; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.16), rgba(255,255,255,.03) 45%, transparent 70%),
+      radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%),
+      rgba(13,21,32,.92);
+    border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+    box-shadow: 0 0 26px color-mix(in srgb, var(--c) 22%, transparent), inset 0 0 18px rgba(255,255,255,.04);
+    cursor: grab; will-change: transform; touch-action: none;
+    transition: box-shadow .2s, border-color .2s;
+  }
+  .bubble:hover { border-color: var(--c); box-shadow: 0 0 34px color-mix(in srgb, var(--c) 45%, transparent), inset 0 0 18px rgba(255,255,255,.06); }
+  .bubble.grab { cursor: grabbing; }
+  .bubble img { width: 40%; height: 40%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+  .bubble span {
+    font: 600 12px "JetBrains Mono", monospace; color: var(--text); opacity: .85; white-space: nowrap;
+    pointer-events: none; direction: ltr;
+  }
+  .bubble.s span { font-size: 10px; }
+  @media (max-width: 760px) { .bubbles { height: 520px; } .bubble span { font-size: 10px; } .bubble.s span { display: none; } }
+
   /* אייקונים */
   .icons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
   .icons a {
@@ -227,6 +261,7 @@
     <div class="links">
       <a href="#about" data-k="nav.about"></a>
       <a href="#edge" data-k="nav.edge"></a>
+      <a href="#tools" data-k="nav.tools"></a>
       <a href="#skills" data-k="nav.skills"></a>
       <a href="#experience" data-k="nav.experience"></a>
       <a href="#projects" data-k="nav.projects"></a>
@@ -263,6 +298,14 @@
     <h2><span class="num mono"></span><span data-k="nav.edge"></span></h2>
     <p class="edge-lead" data-k="edgeLead"></p>
     <div class="edge" id="edgeList"></div>
+  </div>
+</section>
+
+<section id="tools" class="reveal">
+  <div class="wrap">
+    <h2><span class="num mono"></span><span data-k="nav.tools"></span></h2>
+    <p class="edge-lead" data-k="toolsLead"></p>
+    <div class="bubbles" id="bubbles" role="list"></div>
   </div>
 </section>
 
@@ -322,7 +365,8 @@ const PROFILE = {
 const TEXT = {
   he: {
     logo: "מלאכי",
-    nav: { about: "עליי", edge: "ה-Edge שלי", skills: "כישורים", experience: "ניסיון", projects: "פרויקטים", contact: "צור קשר" },
+    toolsLead: "הכלים והשפות שאני עובד איתם. אפשר לתפוס בועה ולזרוק אותה.",
+    nav: { about: "עליי", edge: "ה-Edge שלי", tools: "הכלים שלי", skills: "כישורים", experience: "ניסיון", projects: "פרויקטים", contact: "צור קשר" },
     hero: {
       hello: "// שלום, אני",
       name: "מלאכי מירוויס",
@@ -349,7 +393,8 @@ const TEXT = {
   },
   en: {
     logo: "Malachi",
-    nav: { about: "About", edge: "My Edge", skills: "Skills", experience: "Experience", projects: "Projects", contact: "Contact" },
+    toolsLead: "The tools and languages I work with. Grab a bubble and throw it.",
+    nav: { about: "About", edge: "My Edge", tools: "My Toolkit", skills: "Skills", experience: "Experience", projects: "Projects", contact: "Contact" },
     hero: {
       hello: "// Hi, I'm",
       name: "Malachi Mirvis",
@@ -436,7 +481,7 @@ function render(lang) {
   // הסתרת אזורים ריקים (וגם הקישור אליהם בתפריט)
   const has = { skills: PROFILE.skills.length, experience: t.jobs.length, projects: t.projects.length };
   let n = 1;
-  ["about", "edge", "skills", "experience", "projects", "contact"].forEach(id => {
+  ["about", "edge", "tools", "skills", "experience", "projects", "contact"].forEach(id => {
     const show = !(id in has) || has[id] > 0;
     document.getElementById(id).style.display = show ? "" : "none";
     document.querySelector(`.links a[href="#${id}"]`).style.display = show ? "" : "none";
@@ -455,6 +500,161 @@ document.getElementById("langBtn").onclick = () => {
 
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: .1 });
 document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+/* ===== בועות הכלים: כל בועה היא כלי. הן נעות, מתנגשות זו בזו וקופצות מהקירות ===== */
+// size: 1 = גדולה, 0.8 = בינונית, 0.64 = קטנה. color = צבע המותג (להילה סביב הבועה)
+const TOOLS = [
+  { n: "Claude",     i: "claude",     size: 1,    color: "#D97757" },
+  { n: "Codex",      i: "codex",      size: 1,    color: "#8ea2ff" },
+  { n: "TypeScript", i: "typescript", size: 1,    color: "#3178C6" },
+  { n: "Python",     i: "python",     size: 1,    color: "#FFD43B" },
+  { n: "Next.js",    i: "nextjs",     size: 1,    color: "#ffffff" },
+  { n: "GitHub",     i: "github",     size: 1,    color: "#ffffff" },
+  { n: "ChatGPT",    i: "chatgpt",    size: 0.8,  color: "#10A37F" },
+  { n: "Gemini",     i: "gemini",     size: 0.8,  color: "#4E86F7" },
+  { n: "Cursor",     i: "cursor",     size: 0.8,  color: "#ffffff" },
+  { n: "VS Code",    i: "vscode",     size: 0.8,  color: "#007ACC" },
+  { n: "React",      i: "react",      size: 0.8,  color: "#61DAFB" },
+  { n: "JavaScript", i: "javascript", size: 0.8,  color: "#F7DF1E" },
+  { n: "Node.js",    i: "nodejs",     size: 0.8,  color: "#5FA04E" },
+  { n: "Tailwind",   i: "tailwind",   size: 0.8,  color: "#38BDF8" },
+  { n: "Vercel",     i: "vercel",     size: 0.8,  color: "#ffffff" },
+  { n: "Notion",     i: "notion",     size: 0.8,  color: "#ffffff" },
+  { n: "Obsidian",   i: "obsidian",   size: 0.8,  color: "#7C3AED" },
+  { n: "C",          i: "c",          size: 0.64, color: "#A8B9CC" },
+  { n: "Solidity",   i: "solidity",   size: 0.64, color: "#9CA3AF" },
+  { n: "HTML",       i: "html",       size: 0.64, color: "#E34F26" },
+  { n: "CSS",        i: "css",        size: 0.64, color: "#1572B6" },
+  { n: "Prisma",     i: "prisma",     size: 0.64, color: "#5A67D8" },
+  { n: "Netlify",    i: "netlify",    size: 0.64, color: "#05BDBA" },
+  { n: "Git",        i: "git",        size: 0.64, color: "#F05032" },
+  { n: "Figma",      i: "figma",      size: 0.64, color: "#F24E1E" },
+];
+
+(function bubbles() {
+  const box = document.getElementById("bubbles");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const balls = TOOLS.map(t => {
+    const el = document.createElement("div");
+    el.className = "bubble" + (t.size < 0.7 ? " s" : "");
+    el.setAttribute("role", "listitem");
+    el.setAttribute("aria-label", t.n);
+    el.style.setProperty("--c", t.color);
+    el.innerHTML = `<img src="icons/${t.i}.svg" alt="" draggable="false"><span>${t.n}</span>`;
+    box.appendChild(el);
+    return { el, t, x: 0, y: 0, vx: 0, vy: 0, r: 0, m: 1, held: false };
+  });
+
+  let W = 0, H = 0, placed = false;
+  function layout() {
+    W = box.clientWidth; H = box.clientHeight;
+    if (W < 100 || H < 100) return;   // האזור עוד לא קיבל גודל; ננסה שוב כשיקבל
+    const first = !placed; placed = true;
+    const scale = Math.max(0.55, Math.min(1, W / 950));   // בועות קטנות יותר בטלפון
+    balls.forEach(b => {
+      b.r = 64 * b.t.size * scale;
+      b.m = b.r * b.r;
+      b.el.style.width = b.el.style.height = (b.r * 2) + "px";
+    });
+    if (first) {
+      // פיזור התחלתי בלי חפיפות (הגדולות קודם)
+      [...balls].sort((a, b) => b.r - a.r).forEach(b => {
+        for (let k = 0; k < 400; k++) {
+          b.x = b.r + Math.random() * (W - 2 * b.r);
+          b.y = b.r + Math.random() * (H - 2 * b.r);
+          if (balls.every(o => o === b || !o.placed || Math.hypot(o.x - b.x, o.y - b.y) > o.r + b.r + 4)) break;
+        }
+        b.placed = true;
+        const a = Math.random() * Math.PI * 2, sp = 0.5 + Math.random() * 0.6;
+        b.vx = Math.cos(a) * sp; b.vy = Math.sin(a) * sp;
+      });
+    }
+    balls.forEach(b => { b.x = Math.min(Math.max(b.x, b.r), W - b.r); b.y = Math.min(Math.max(b.y, b.r), H - b.r); });
+    draw();
+  }
+
+  function draw() { balls.forEach(b => { b.el.style.transform = `translate(${b.x - b.r}px, ${b.y - b.r}px)`; }); }
+
+  const CRUISE = 0.75, MAX = 14;   // מהירות שיוט ומהירות מרבית (פיקסלים לפריים)
+  function step(dt) {
+    for (const b of balls) {
+      if (b.held) continue;
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      // קירות
+      if (b.x < b.r)     { b.x = b.r;     b.vx =  Math.abs(b.vx); }
+      if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx); }
+      if (b.y < b.r)     { b.y = b.r;     b.vy =  Math.abs(b.vy); }
+      if (b.y > H - b.r) { b.y = H - b.r; b.vy = -Math.abs(b.vy); }
+      // אחרי זריקה חזקה הבועה מאטה בהדרגה חזרה למהירות שיוט
+      const sp = Math.hypot(b.vx, b.vy);
+      if (sp > MAX) { b.vx *= MAX / sp; b.vy *= MAX / sp; }
+      else if (sp > CRUISE * 1.4) { b.vx *= 0.985; b.vy *= 0.985; }
+      else if (sp < CRUISE * 0.6) { b.vx += (Math.random() - .5) * 0.08; b.vy += (Math.random() - .5) * 0.08; }
+    }
+    // התנגשויות בין בועות (התנגשות אלסטית לפי מסה)
+    for (let i = 0; i < balls.length; i++) for (let j = i + 1; j < balls.length; j++) {
+      const a = balls[i], c = balls[j];
+      const dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy), min = a.r + c.r;
+      if (d >= min || d === 0) continue;
+      const nx = dx / d, ny = dy / d;
+      const ma = a.held ? 1e9 : a.m, mc = c.held ? 1e9 : c.m;
+      const overlap = min - d, tot = ma + mc;
+      if (!a.held) { a.x -= nx * overlap * (mc / tot); a.y -= ny * overlap * (mc / tot); }
+      if (!c.held) { c.x += nx * overlap * (ma / tot); c.y += ny * overlap * (ma / tot); }
+      const rv = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
+      if (rv > 0) continue;
+      const imp = (-2 * rv) / (1 / ma + 1 / mc);
+      if (!a.held) { a.vx -= (imp / ma) * nx; a.vy -= (imp / ma) * ny; }
+      if (!c.held) { c.vx += (imp / mc) * nx; c.vy += (imp / mc) * ny; }
+    }
+  }
+
+  // תפיסה וזריקה עם העכבר או האצבע
+  let drag = null;
+  box.addEventListener("pointerdown", e => {
+    const el = e.target.closest(".bubble"); if (!el) return;
+    const b = balls.find(x => x.el === el);
+    const rect = box.getBoundingClientRect();
+    drag = { b, id: e.pointerId, ox: e.clientX - rect.left - b.x, oy: e.clientY - rect.top - b.y, hist: [] };
+    b.held = true; el.classList.add("grab"); el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  box.addEventListener("pointermove", e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const rect = box.getBoundingClientRect(), b = drag.b;
+    b.x = Math.min(Math.max(e.clientX - rect.left - drag.ox, b.r), W - b.r);
+    b.y = Math.min(Math.max(e.clientY - rect.top - drag.oy, b.r), H - b.r);
+    drag.hist.push({ x: b.x, y: b.y, t: performance.now() });
+    if (drag.hist.length > 6) drag.hist.shift();
+    if (still) draw();
+  });
+  const release = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const b = drag.b, h = drag.hist;
+    if (h.length > 1) {
+      const p = h[0], q = h[h.length - 1], ms = Math.max(16, q.t - p.t);
+      b.vx = ((q.x - p.x) / ms) * 16; b.vy = ((q.y - p.y) / ms) * 16;   // מהירות הזריקה
+    }
+    b.held = false; b.el.classList.remove("grab"); drag = null;
+  };
+  box.addEventListener("pointerup", release);
+  box.addEventListener("pointercancel", release);
+
+  layout();
+  new ResizeObserver(() => layout()).observe(box);
+  if (still) return;   // מי שביקש פחות תנועה: הבועות עומדות במקום
+
+  // האנימציה רצה רק כשהאזור נראה על המסך
+  let visible = false, last = 0;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) { last = 0; requestAnimationFrame(loop); } }).observe(box);
+  function loop(t) {
+    if (!visible) return;
+    if (!placed) { requestAnimationFrame(loop); return; }
+    const dt = last ? Math.min(3, (t - last) / 16.67) : 1; last = t;
+    step(dt); step(0); draw();
+    requestAnimationFrame(loop);
+  }
+})();
 
 /* ===== אנימציית פתיחה: 0 ו-1 ירוקים יורדים מלמעלה למטה ===== */
 (function intro() {
