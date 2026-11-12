@@ -179,7 +179,8 @@
   .card .stack { display: flex; flex-wrap: wrap; gap: 8px; font-size: .78rem; color: var(--green); }
 
   .contact { text-align: center; }
-  .contact p { color: var(--muted); max-width: 520px; margin: 0 auto 26px; }
+  .contact p { color: var(--muted); max-width: 520px; margin: 0 auto; }
+  #contact { padding-bottom: 40px; }
 
   /* אייקונים */
   .icons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -290,7 +291,6 @@
   <div class="wrap">
     <h2><span class="num mono"></span><span data-k="nav.contact"></span></h2>
     <p data-k="contact.text"></p>
-    <div class="icons" id="contactIcons"></div>
   </div>
 </section>
 
@@ -343,7 +343,7 @@ const TEXT = {
     ],
     jobs: [],
     projects: [],
-    contact: { text: "מחפשים מישהו לצוות? אשמח לשמוע. אפשר ליצור איתי קשר בכל אחת מהדרכים כאן." },
+    contact: { text: "מחפשים מישהו לצוות? אשמח לשמוע. אפשר ליצור איתי קשר בכל אחת מהדרכים כאן למטה." },
     langBtn: "EN",
     view: "לצפייה ←",
   },
@@ -370,7 +370,7 @@ const TEXT = {
     ],
     jobs: [],
     projects: [],
-    contact: { text: "Looking for someone to join your team? I'd love to hear from you. Reach me any of these ways." },
+    contact: { text: "Looking for someone to join your team? I'd love to hear from you. Reach me any of the ways below." },
     langBtn: "עב",
     view: "View →",
   },
@@ -430,7 +430,6 @@ function render(lang) {
       <div class="stack mono">${p.stack.map(s => `<span>${esc(s)}</span>`).join("")}</div>
       <span class="mono" style="color:var(--blue);font-size:.85rem">${esc(t.view)}</span>
     </a>`).join("");
-  document.getElementById("contactIcons").innerHTML = iconLinks();
   document.getElementById("footerIcons").innerHTML = iconLinks();
   document.getElementById("year").textContent = new Date().getFullYear();
 
