@@ -184,7 +184,7 @@
 
   /* ===== בועות הכלים ===== */
   .bubbles {
-    position: relative; height: 560px; margin-top: 8px; overflow: hidden;
+    position: relative; height: 660px; margin-top: 8px; overflow: hidden;
     border-radius: 22px; border: 1px solid var(--line);
     background:
       radial-gradient(ellipse at 20% 0%, rgba(0,230,118,.07), transparent 55%),
@@ -213,8 +213,11 @@
     font: 600 12px "JetBrains Mono", monospace; color: var(--text); opacity: .85; white-space: nowrap;
     pointer-events: none; direction: ltr;
   }
-  .bubble.s span { font-size: 10px; }
-  @media (max-width: 760px) { .bubbles { height: 520px; } .bubble span { font-size: 10px; } .bubble.s span { display: none; } }
+  .bubble.s span { font-size: 9.5px; }
+  .bubble.s img { width: 38%; height: 38%; }
+  .bubble.nolabel span { display: none; }
+  .bubble.nolabel img { width: 52%; height: 52%; }
+  @media (max-width: 760px) { .bubbles { height: 720px; } .bubble span { font-size: 9px; } }
 
   /* אייקונים */
   .icons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -504,12 +507,22 @@ document.querySelectorAll(".reveal").forEach(el => io.observe(el));
 /* ===== בועות הכלים: כל בועה היא כלי. הן נעות, מתנגשות זו בזו וקופצות מהקירות ===== */
 // size: 1 = גדולה, 0.8 = בינונית, 0.64 = קטנה. color = צבע המותג (להילה סביב הבועה)
 const TOOLS = [
+  // גדולות
   { n: "Claude",     i: "claude",     size: 1,    color: "#D97757" },
   { n: "Codex",      i: "codex",      size: 1,    color: "#8ea2ff" },
   { n: "TypeScript", i: "typescript", size: 1,    color: "#3178C6" },
   { n: "Python",     i: "python",     size: 1,    color: "#FFD43B" },
   { n: "Next.js",    i: "nextjs",     size: 1,    color: "#ffffff" },
   { n: "GitHub",     i: "github",     size: 1,    color: "#ffffff" },
+  { n: "Flutter",    i: "flutter",    size: 1,    color: "#02569B" },
+  { n: "Supabase",   i: "supabase",   size: 1,    color: "#3ECF8E" },
+  // בינוניות
+  { n: "Expo",       i: "expo",       size: 0.8,  color: "#ffffff" },
+  { n: "Convex",     i: "convex",     size: 0.8,  color: "#F3B01C" },
+  { n: "Firebase",   i: "firebase",   size: 0.8,  color: "#FFCA28" },
+  { n: "PostgreSQL", i: "postgresql", size: 0.8,  color: "#4169E1" },
+  { n: "Docker",     i: "docker",     size: 0.8,  color: "#2496ED" },
+  { n: "Dart",       i: "dart",       size: 0.8,  color: "#0175C2" },
   { n: "ChatGPT",    i: "chatgpt",    size: 0.8,  color: "#10A37F" },
   { n: "Gemini",     i: "gemini",     size: 0.8,  color: "#4E86F7" },
   { n: "Cursor",     i: "cursor",     size: 0.8,  color: "#ffffff" },
@@ -529,6 +542,26 @@ const TOOLS = [
   { n: "Netlify",    i: "netlify",    size: 0.64, color: "#05BDBA" },
   { n: "Git",        i: "git",        size: 0.64, color: "#F05032" },
   { n: "Figma",      i: "figma",      size: 0.64, color: "#F24E1E" },
+  // מסדי נתונים וצד שרת
+  { n: "MySQL",      i: "mysql",      size: 0.64, color: "#4479A1" },
+  { n: "SQLite",     i: "sqlite",     size: 0.64, color: "#5aa9e6" },
+  { n: "MongoDB",    i: "mongodb",    size: 0.64, color: "#47A248" },
+  { n: "Redis",      i: "redis",      size: 0.64, color: "#FF4438" },
+  { n: "Express",    i: "express",    size: 0.64, color: "#ffffff" },
+  { n: "AWS",        i: "aws",        size: 0.64, color: "#FF9900" },
+  { n: "Linux",      i: "linux",      size: 0.64, color: "#FCC624" },
+  { n: "npm",        i: "npm",        size: 0.64, color: "#CB3837" },
+  { n: "Postman",    i: "postman",    size: 0.64, color: "#FF6C37" },
+  // שפות
+  { n: "Java",       i: "java",       size: 0.64, color: "#E76F00" },
+  { n: "C++",        i: "cpp",        size: 0.64, color: "#00599C" },
+  { n: "C#",         i: "csharp",     size: 0.64, color: "#9B4F96" },
+  { n: "Go",         i: "go",         size: 0.64, color: "#00ADD8" },
+  { n: "Rust",       i: "rust",       size: 0.64, color: "#ffffff" },
+  { n: "Kotlin",     i: "kotlin",     size: 0.64, color: "#7F52FF" },
+  { n: "Swift",      i: "swift",      size: 0.64, color: "#F05138" },
+  { n: "PHP",        i: "php",        size: 0.64, color: "#777BB4" },
+  { n: "Bash",       i: "bash",       size: 0.64, color: "#4EAA25" },
 ];
 
 (function bubbles() {
@@ -550,11 +583,15 @@ const TOOLS = [
     W = box.clientWidth; H = box.clientHeight;
     if (W < 100 || H < 100) return;   // האזור עוד לא קיבל גודל; ננסה שוב כשיקבל
     const first = !placed; placed = true;
-    const scale = Math.max(0.55, Math.min(1, W / 950));   // בועות קטנות יותר בטלפון
+    // גודל הבועות מחושב לפי שטח האזור, כך שהן ממלאות כ-36% ממנו בכל מסך ובכל כמות
+    const sumSq = balls.reduce((s, b) => s + b.t.size * b.t.size, 0);
+    const fill = W < 600 ? 0.44 : 0.36;   // בטלפון קצת יותר צפוף, כדי שהבועות לא ייצאו זעירות
+    const R = Math.min(66, Math.sqrt((fill * W * H) / (Math.PI * sumSq)));
     balls.forEach(b => {
-      b.r = 64 * b.t.size * scale;
+      b.r = R * b.t.size;
       b.m = b.r * b.r;
       b.el.style.width = b.el.style.height = (b.r * 2) + "px";
+      b.el.classList.toggle("nolabel", b.r < 28);   // בבועה קטנה מדי מציגים רק לוגו
     });
     if (first) {
       // פיזור התחלתי בלי חפיפות (הגדולות קודם)
