@@ -146,8 +146,24 @@
     padding: 22px; position: relative; overflow: hidden; transition: transform .2s, border-color .2s;
   }
   .edge .item::before { content: ""; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 3px; background: var(--c); }
-  .edge .item:hover { transform: translateY(-4px); border-color: var(--c); }
-  .edge .k { font: 800 .8rem "JetBrains Mono", monospace; color: var(--c); letter-spacing: .08em; }
+  .edge .item:hover { border-color: var(--c); }
+  /* תלת ממד: הכרטיס מתהפך לפי העכבר, והבהק עוקב אחריו */
+  .edge { perspective: 900px; }
+  .edge .item { transform-style: preserve-3d; will-change: transform; }
+  .edge .item::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--c) 22%, transparent), transparent 65%);
+    opacity: 0; transition: opacity .3s;
+  }
+  .edge .item.tilt::after { opacity: 1; }
+  .edge .item.tilt { transition: border-color .2s; box-shadow: 0 18px 40px rgba(0,0,0,.45), 0 0 30px color-mix(in srgb, var(--c) 18%, transparent); }
+
+  /* רשת הנוירונים ברקע ושובל ה-0/1 של העכבר */
+  #neural { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+  #trail { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 60; pointer-events: none; }
+  .edge .k { font: 800 .8rem "JetBrains Mono", monospace; color: var(--c); letter-spacing: .08em; direction: ltr; unicode-bidi: isolate; }
+  [dir="rtl"] .edge .k { text-align: right; }
+  h2 .num { direction: ltr; unicode-bidi: isolate; }   /* "01." נשאר בסדר הנכון גם בזמן ההתפרקות */
   .edge h3 { font-size: 1.15rem; margin: 6px 0 8px; }
   .edge p { color: var(--muted); font-size: .95rem; }
   .edge-lead { color: var(--muted); max-width: 680px; margin: -8px 0 26px; font-size: 1.05rem; }
@@ -266,6 +282,9 @@
 </style>
 </head>
 <body>
+
+<canvas id="neural" aria-hidden="true"></canvas>
+<canvas id="trail" aria-hidden="true"></canvas>
 
 <div id="intro" aria-hidden="true">
   <canvas id="matrix"></canvas>
@@ -709,6 +728,144 @@ const TOOLS = [
   }
 })();
 
+/* ===== רשת נוירונים ברקע: נקודות שזזות לאט, מתחברות בקווים ונמשכות לעכבר.
+   פולסים ירוקים וכחולים עוברים לאורך הקווים, כמו אותות במוח. ===== */
+(function neural() {
+  const cv = document.getElementById("neural"), ctx = cv.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const COLORS = ["0,230,118", "47,128,255", "47,128,255", "0,230,118", "255,46,85"];
+  const LINK = 150;   // מרחק מרבי לקו בין שתי נקודות
+  let W, H, nodes = [], pulses = [], mouse = { x: -9999, y: -9999 };
+
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const want = Math.max(28, Math.min(95, Math.round(W * H / 15000)));
+    while (nodes.length < want) nodes.push({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25,
+      r: 1 + Math.random() * 1.6, c: COLORS[Math.floor(Math.random() * COLORS.length)],
+    });
+    nodes.length = want;
+  }
+  resize(); addEventListener("resize", resize);
+  addEventListener("pointermove", e => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+  document.addEventListener("pointerleave", () => { mouse.x = mouse.y = -9999; });
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (const n of nodes) {
+      // משיכה עדינה לעכבר
+      const dx = mouse.x - n.x, dy = mouse.y - n.y, d = Math.hypot(dx, dy);
+      if (d < 200 && d > 1) { n.vx += dx / d * 0.012; n.vy += dy / d * 0.012; }
+      n.vx *= 0.99; n.vy *= 0.99;
+      const sp = Math.hypot(n.vx, n.vy);
+      if (sp < 0.12) { n.vx += (Math.random() - .5) * .04; n.vy += (Math.random() - .5) * .04; }
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < -20) n.x = W + 20; if (n.x > W + 20) n.x = -20;
+      if (n.y < -20) n.y = H + 20; if (n.y > H + 20) n.y = -20;
+    }
+    // קווים
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d > LINK) continue;
+      const al = (1 - d / LINK) * 0.22;
+      ctx.strokeStyle = `rgba(${a.c},${al})`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      if (!still && pulses.length < 14 && Math.random() < 0.0009) pulses.push({ a, b, t: 0, c: Math.random() < .5 ? a.c : b.c });
+    }
+    // קווים מהעכבר לנקודות הקרובות
+    for (const n of nodes) {
+      const d = Math.hypot(mouse.x - n.x, mouse.y - n.y);
+      if (d < 170) {
+        ctx.strokeStyle = `rgba(0,230,118,${(1 - d / 170) * 0.45})`;
+        ctx.beginPath(); ctx.moveTo(mouse.x, mouse.y); ctx.lineTo(n.x, n.y); ctx.stroke();
+      }
+    }
+    // הנקודות
+    for (const n of nodes) {
+      ctx.fillStyle = `rgba(${n.c},.75)`;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+    }
+    // פולסים שרצים לאורך הקווים
+    pulses = pulses.filter(p => {
+      p.t += 0.022;
+      if (p.t >= 1 || Math.hypot(p.a.x - p.b.x, p.a.y - p.b.y) > LINK) return false;
+      const x = p.a.x + (p.b.x - p.a.x) * p.t, y = p.a.y + (p.b.y - p.a.y) * p.t;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 7);
+      g.addColorStop(0, `rgba(${p.c},.95)`); g.addColorStop(1, `rgba(${p.c},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
+      return true;
+    });
+    if (!still) requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+/* ===== שובל של 0 ו-1 ירוקים אחרי העכבר (רק במחשב, לא במסך מגע) ===== */
+(function trail() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  const cv = document.getElementById("trail"), ctx = cv.getContext("2d");
+  let W, H, bits = [], last = null, running = false;
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize(); addEventListener("resize", resize);
+  addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") return;
+    const p = { x: e.clientX, y: e.clientY };
+    if (last && Math.hypot(p.x - last.x, p.y - last.y) < 16) return;   // ספרה כל 16 פיקסלים של תנועה
+    last = p;
+    bits.push({ x: p.x + (Math.random() - .5) * 8, y: p.y + (Math.random() - .5) * 8, vy: .4 + Math.random() * .6,
+                life: 1, ch: Math.random() < .5 ? "0" : "1", size: 11 + Math.random() * 5 });
+    if (bits.length > 70) bits.shift();
+    if (!running) { running = true; requestAnimationFrame(frame); }
+  }, { passive: true });
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    bits = bits.filter(b => {
+      b.life -= 0.022; b.y += b.vy; b.vy += 0.04;   // נופל לאט ודועך
+      if (b.life <= 0) return false;
+      if (Math.random() < 0.08) b.ch = b.ch === "0" ? "1" : "0";
+      ctx.font = `700 ${b.size}px "JetBrains Mono", monospace`;
+      ctx.shadowColor = "rgba(0,230,118,.9)"; ctx.shadowBlur = 8;
+      ctx.fillStyle = b.life > .8 ? `rgba(200,255,224,${b.life})` : `rgba(0,230,118,${b.life})`;
+      ctx.fillText(b.ch, b.x, b.y);
+      return true;
+    });
+    ctx.shadowBlur = 0;
+    if (bits.length) requestAnimationFrame(frame); else running = false;
+  }
+})();
+
+/* ===== כרטיסי ה-Edge מתהפכים בתלת ממד לפי העכבר ===== */
+(function tiltCards() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  const MAX = 10;   // זווית מרבית במעלות
+  document.addEventListener("pointermove", e => {
+    const card = e.target.closest && e.target.closest(".edge .item");
+    document.querySelectorAll(".edge .item.tilt").forEach(c => { if (c !== card) reset(c); });
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    card.classList.add("tilt");
+    card.style.transition = "transform .08s linear, border-color .2s";
+    card.style.transform = `rotateX(${((.5 - py) * MAX * 2).toFixed(2)}deg) rotateY(${((px - .5) * MAX * 2).toFixed(2)}deg) translateZ(10px)`;
+    card.style.setProperty("--mx", (px * 100).toFixed(1) + "%");
+    card.style.setProperty("--my", (py * 100).toFixed(1) + "%");
+  }, { passive: true });
+  function reset(c) {
+    c.classList.remove("tilt");
+    c.style.transition = "transform .5s cubic-bezier(.2,.8,.2,1), border-color .2s";
+    c.style.transform = "";
+  }
+  document.addEventListener("pointerleave", () => document.querySelectorAll(".edge .item.tilt").forEach(reset));
+})();
+
 /* ===== טקסט שמתפרק ל-0 ו-1 בגלילה למטה, ומתחבר בחזרה בגלילה למעלה =====
    האנימציה תלויה רק במיקום הגלילה, לא בזמן: כל מיקום נראה תמיד אותו דבר,
    ולכן גלילה למעלה מריצה בדיוק את אותה אנימציה הפוך. כל שורה מתפרקת
@@ -777,6 +934,7 @@ const TOOLS = [
     const start = nav + range;
     const shift = Math.max(0, 140 - scrollY);   // בראש העמוד שום דבר לא מתפרק
     for (const b of blocks) {
+      if (b.decoding) continue;   // הכותרת באמצע אנימציית הפענוח
       if (!force && (b.bottom - scrollY < -60 || b.top - scrollY > vh)) continue;
       for (const c of b.chars) {
         const y = c.y - scrollY + shift;
@@ -825,6 +983,40 @@ const TOOLS = [
 
   build();
   window.__mx = { rebuild: build };   // אחרי החלפת שפה
+
+  /* פענוח הכותרת: בזמן מסך הפתיחה, השם והתפקיד מוסתרים מאחורי 0 ו-1 מהבהבים.
+     כשמסך הפתיחה נסגר, כל אות "מפוענחת" בתורה, לפי סדר הקריאה. */
+  if (document.getElementById("intro")) {
+    const DECODE = [".hero .tag", "h1 .name", "h1 .role"];
+    const dblocks = blocks.filter(b => DECODE.some(s => b.el.matches(s)));
+    const all = dblocks.flatMap(b => b.chars);
+    const rnd = () => (Math.random() < .5 ? "0" : "1");
+    dblocks.forEach(b => { b.decoding = true; });
+    all.forEach(c => {
+      c.o.style.opacity = "0";
+      c.s.setAttribute("data-g", rnd());
+      c.s.style.setProperty("--go", ".9"); c.s.style.setProperty("--gy", "0em");
+    });
+    const flicker = setInterval(() => all.forEach(c => { if (!c.done) c.s.setAttribute("data-g", rnd()); }), 70);
+    addEventListener("introdone", () => {
+      const t0 = performance.now();
+      dblocks.forEach((b, bi) => b.chars.forEach((c, i) => { c.at = 250 + bi * 380 + i * 75 + Math.random() * 260; }));
+      (function step() {
+        const t = performance.now() - t0; let left = 0;
+        for (const c of all) {
+          if (c.done) continue;
+          if (t < c.at) { left++; continue; }
+          c.done = true; c.g = ""; c.last = 0;
+          c.s.removeAttribute("data-g"); c.s.style.removeProperty("--go"); c.s.style.removeProperty("--gy");
+          c.o.style.opacity = "";
+        }
+        if (left) return requestAnimationFrame(step);
+        clearInterval(flicker);
+        dblocks.forEach(b => { b.decoding = false; });
+        update(true);
+      })();
+    }, { once: true });
+  }
 })();
 
 /* ===== אנימציית פתיחה: 0 ו-1 ירוקים יורדים מלמעלה למטה ===== */
@@ -885,6 +1077,7 @@ const TOOLS = [
     if (closed) return; closed = true;
     intro.classList.add("done");
     document.body.style.overflow = "";
+    window.dispatchEvent(new Event("introdone"));   // מתחיל את פענוח הכותרת
     setTimeout(() => { running = false; intro.remove(); }, 950);
   }
   setTimeout(close, 4200);
