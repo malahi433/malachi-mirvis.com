@@ -235,8 +235,23 @@
   footer .icons { margin-bottom: 22px; }
   footer .brandline { height: 3px; width: 120px; margin: 0 auto 18px; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--blue), var(--red)); }
 
-  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .6s, transform .6s; }
-  .reveal.in { opacity: 1; transform: none; }
+  /* ===== טקסט שמתפרק למטריקס בגלילה ===== */
+  .mx-w { white-space: nowrap; }                 /* מילה שלמה לא נשברת באמצע */
+  .mx { position: relative; }
+  /* הספרה 0/1 שמחליפה את האות. קיימת רק בזמן ההתפרקות, כדי לא לשבש את סדר הטקסט במנוחה */
+  .mx[data-g]::after {
+    content: attr(data-g);
+    position: absolute; left: 0; right: 0; top: 0; text-align: center;
+    font-family: "JetBrains Mono", monospace; font-weight: 700; font-style: normal;
+    color: var(--green); -webkit-text-fill-color: var(--green);
+    text-shadow: 0 0 8px rgba(0,230,118,.9), 0 0 18px rgba(0,230,118,.35);
+    opacity: var(--go, 0); transform: translateY(var(--gy, 0));
+    pointer-events: none;
+  }
+
+  /* רק דהייה פנימה, בלי תזוזה, כדי שמיקום האותיות יישאר קבוע לאנימציית המטריקס */
+  .reveal { opacity: 0; transition: opacity .7s; }
+  .reveal.in { opacity: 1; }
 
   @media (max-width: 760px) {
     .links { display: none; }
@@ -499,6 +514,7 @@ document.getElementById("langBtn").onclick = () => {
   lang = lang === "he" ? "en" : "he";
   try { localStorage.setItem("lang", lang); } catch (e) {}
   render(lang);
+  if (window.__mx) window.__mx.rebuild();   // הטקסט החדש מתפרק גם הוא
 };
 
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: .1 });
@@ -691,6 +707,124 @@ const TOOLS = [
     step(dt); step(0); draw();
     requestAnimationFrame(loop);
   }
+})();
+
+/* ===== טקסט שמתפרק ל-0 ו-1 בגלילה למטה, ומתחבר בחזרה בגלילה למעלה =====
+   האנימציה תלויה רק במיקום הגלילה, לא בזמן: כל מיקום נראה תמיד אותו דבר,
+   ולכן גלילה למעלה מריצה בדיוק את אותה אנימציה הפוך. כל שורה מתפרקת
+   כשהיא מגיעה לחלק העליון של המסך. */
+(function matrixText() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const SELECTORS = [
+    ".hero .tag", "h1 .name", "h1 .role", ".hero .lead",
+    "section h2 > span", "#aboutText p", ".edge-lead", ".edge .k", ".edge h3", ".edge p",
+    ".contact p", "footer .wrap > span[data-k]",
+  ];
+  let blocks = [], uid = 0;
+
+  // מספר "אקראי" קבוע לכל אות, כדי שהאנימציה תהיה זהה בכל פעם
+  function hash(a, b) {
+    let h = Math.imul(a, 374761393) + Math.imul(b, 668265263) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+
+  function split(el) {
+    if (el.querySelector(".mx")) return null;
+    // טקסט בגרדיאנט (השם): הגרדיאנט עובר לכל אות בנפרד
+    const cs = getComputedStyle(el);
+    if (!el.dataset.grad && (cs.webkitBackgroundClip === "text" || cs.backgroundClip === "text")) el.dataset.grad = cs.backgroundImage;
+    const grad = el.dataset.grad;
+    if (grad) el.style.backgroundImage = "none";
+    const text = el.textContent;
+    el.textContent = "";
+    const chars = [];
+    for (const tok of text.split(/(\s+)/)) {
+      if (!tok) continue;
+      if (/^\s+$/.test(tok)) { el.appendChild(document.createTextNode(tok)); continue; }
+      const w = document.createElement("span"); w.className = "mx-w";
+      for (const ch of Array.from(tok)) {
+        const s = document.createElement("span"); s.className = "mx";
+        const o = document.createElement("span"); o.className = "o"; o.textContent = ch;
+        if (grad) { o.style.backgroundImage = grad; o.style.webkitBackgroundClip = o.style.backgroundClip = "text"; o.style.color = "transparent"; }
+        s.appendChild(o); w.appendChild(s);
+        const i = uid++;
+        chars.push({ s, o, i, j: (hash(i, 7) % 1000) / 1000 * 0.45, y: 0, last: -1, g: "" });
+      }
+      el.appendChild(w);
+    }
+    return { el, grad, chars, top: 0, bottom: 0 };
+  }
+
+  // מיקום כל אות בעמוד (נמדד פעם אחת, ושוב כשהגודל משתנה)
+  function measure() {
+    for (const b of blocks) {
+      const r = b.el.getBoundingClientRect();
+      b.top = r.top + scrollY; b.bottom = r.bottom + scrollY;
+      for (const c of b.chars) {
+        const cr = c.s.getBoundingClientRect();
+        c.y = cr.top + scrollY + cr.height / 2;
+        if (b.grad) { c.o.style.backgroundSize = r.width + "px 100%"; c.o.style.backgroundPosition = -(cr.left - r.left) + "px 0"; }
+      }
+    }
+    update(true);
+  }
+
+  function update(force) {
+    const vh = innerHeight, nav = 64;
+    const range = Math.max(140, vh * 0.24);
+    const start = nav + range;
+    const shift = Math.max(0, 140 - scrollY);   // בראש העמוד שום דבר לא מתפרק
+    for (const b of blocks) {
+      if (!force && (b.bottom - scrollY < -60 || b.top - scrollY > vh)) continue;
+      for (const c of b.chars) {
+        const y = c.y - scrollY + shift;
+        let k = ((start - y) / range - c.j) / 0.55;
+        k = k <= 0 ? 0 : k >= 1 ? 1 : Math.round(k * 200) / 200;
+        if (k === c.last) continue;
+        c.last = k;
+        if (k === 0) {                           // האות המקורית, שלמה
+          c.o.style.opacity = "";
+          if (c.g) { c.s.removeAttribute("data-g"); c.g = ""; }
+          c.s.style.removeProperty("--go"); c.s.style.removeProperty("--gy");
+          continue;
+        }
+        const fade = Math.min(1, k / 0.28);
+        c.o.style.opacity = (1 - fade * fade * (3 - 2 * fade)).toFixed(3);   // האות נעלמת
+        const g = (hash(c.i, Math.floor(k * 14)) & 1) ? "1" : "0";            // הספרה מהבהבת לפי ההתקדמות
+        if (g !== c.g) { c.s.setAttribute("data-g", g); c.g = g; }
+        const go = k < 0.25 ? k / 0.25 : 1 - (k - 0.25) / 0.75;              // הספרה מופיעה ואז דועכת
+        c.s.style.setProperty("--go", go.toFixed(3));
+        c.s.style.setProperty("--gy", (Math.max(0, k - 0.15) * 2.4).toFixed(3) + "em");   // ונופלת כמו גשם
+      }
+    }
+  }
+
+  const done = new WeakMap();   // טקסט שכבר פורק לאותיות ולא השתנה
+  function build() {
+    blocks = [];
+    document.querySelectorAll(SELECTORS.join(",")).forEach(el => {
+      if (!el.offsetParent) return;   // אזור מוסתר
+      const b = el.querySelector(".mx") ? done.get(el) : split(el);
+      if (b) { done.set(el, b); blocks.push(b); }
+    });
+    measure();
+  }
+
+  let ticking = false;
+  addEventListener("scroll", () => {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(() => { ticking = false; update(false); });
+  }, { passive: true });
+  let rt; const remeasure = () => { clearTimeout(rt); rt = setTimeout(measure, 120); };
+  addEventListener("resize", remeasure);
+  new ResizeObserver(remeasure).observe(document.body);
+  if (document.fonts) document.fonts.ready.then(remeasure);
+  document.addEventListener("transitionend", e => { if (e.target.classList && e.target.classList.contains("reveal")) remeasure(); });
+
+  build();
+  window.__mx = { rebuild: build };   // אחרי החלפת שפה
 })();
 
 /* ===== אנימציית פתיחה: 0 ו-1 ירוקים יורדים מלמעלה למטה ===== */
