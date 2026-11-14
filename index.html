@@ -125,6 +125,23 @@
   [dir="rtl"] h2::after { background: linear-gradient(270deg, var(--green), var(--blue), var(--red)); }
   .about { display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start; }
   .about p { color: var(--muted); margin-bottom: 14px; }
+  .about h3 { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 26px 0 10px; }
+  .about h3:first-child { margin-top: 0; }
+  .about h3::before {
+    content: ""; display: inline-block; width: 4px; height: 1.05em; vertical-align: -0.15em;
+    margin-inline-end: 10px; border-radius: 3px; background: linear-gradient(var(--green), var(--blue));
+  }
+  .about-list { list-style: none; display: grid; gap: 10px; margin: 0 0 6px; }
+  .about-list li {
+    --c: var(--green);
+    color: var(--muted); padding: 10px 14px; border-radius: 12px;
+    background: var(--card); border: 1px solid var(--line); border-inline-start: 3px solid var(--c);
+  }
+  .about-list li:nth-child(3n+2) { --c: var(--blue); }
+  .about-list li:nth-child(3n) { --c: var(--red); }
+  .about-list b { color: var(--c); font-weight: 700; }
+  .about p.about-end { color: var(--green); font-weight: 700; margin-top: 18px; text-shadow: 0 0 12px rgba(0,230,118,.45); }
+  .about-end::before { content: "> "; color: var(--red); }
   .avatar {
     aspect-ratio: 1; border-radius: var(--radius); border: 1px solid var(--line);
     background:
@@ -411,9 +428,25 @@ const TEXT = {
       lead: "משלב בינה מלאכותית ופיתוח תוכנה כדי להפוך רעיונות למוצרים שעובדים. גר בבאר שבע ופתוח להזדמנויות באזור חיפה או מרחוק.",
       cta1: "ה-Edge שלי", cta2: "בואו נדבר",
     },
+    // h = כותרת משנה, p = פסקה, ul = רשימה [שם התחום, תיאור], end = שורת הסיום
     about: [
-      "אני מלאכי מירוויס, מבאר שבע. אני חי בצומת שבין בינה מלאכותית לפיתוח תוכנה, ואוהב לקחת רעיון ולהביא אותו לחיים.",
-      "אני פתוח להזדמנויות עבודה באזור חיפה, במשרה במשרד, היברידית או מהבית. אשמח לשמוע על תפקידים ופרויקטים מעניינים.",
+      { h: "קצת עליי" },
+      { p: "אני אדם רב־תחומי עם סקרנות טכנולוגית עמוקה ונטייה טבעית לחקור, לפרק ולהבין מערכות מורכבות." },
+      { p: "אני אוטודידקט במהותי - חלק גדול מהידע שלי נרכש באופן עצמאי, דרך מחקר, התנסות מעשית ולמידה אינטנסיבית. אני לומד מהר, אוהב להיכנס לעולמות תוכן חדשים ולא מסתפק בהבנה שטחית. מעניין אותי להבין לא רק איך טכנולוגיה עובדת, אלא גם מה עומד מאחוריה, איך אפשר לשפר אותה ואיך ניתן להשתמש בה כדי ליצור דברים חדשים." },
+      { p: "כיום אני סטודנט למדעי המחשב וניהול באוניברסיטה הפתוחה, לצד העמקה עצמאית במגוון רחב של תחומים טכנולוגיים." },
+      { h: "תחומי ידע ועניין" },
+      { ul: [
+        ["תכנות ופיתוח", "שפות תכנות, פיתוח תוכנה, סקריפטים ופתרון בעיות."],
+        ["רשתות מחשבים", "ארכיטקטורת רשתות, פרוטוקולי תקשורת ותשתיות."],
+        ["סייבר", "אבטחת מידע, מחקר חולשות, סייבר התקפי והגנתי."],
+        ["Blockchain ו-Web3", "מערכות מבוזרות, פרוטוקולים, חוזים חכמים ואקוסיסטם הקריפטו."],
+        ["קריפטוגרפיה", "מנגנוני הצפנה, חתימות דיגיטליות ויסודות אבטחת המידע."],
+        ["בינה מלאכותית", "מודלי שפה, סוכני AI, אוטומציות ואינטגרציה של מערכות חכמות."],
+      ] },
+      { h: "איך אני ניגש לדברים?" },
+      { p: "אני נהנה במיוחד מהחיבור בין עולמות תוכן שונים. בין אם מדובר בטכנולוגיה, תוכנה, אבטחת מידע, מערכות פיננסיות או רעיונות חדשים- אני אוהב ללמוד, לחקור, לזהות הזדמנויות ולחשוב איך אפשר להפוך רעיון למשהו שעובד בפועל." },
+      { p: "מבחינתי, ידע הוא לא דבר סטטי. כל תחום חדש הוא הזדמנות להבין משהו נוסף על העולם ולחבר אותו למה שכבר למדתי." },
+      { end: "כןכן ממש כמו AI" },
     ],
     edgeLead: "מה אני מביא איתי לכל צוות ולכל פרויקט:",
     edge: [
@@ -440,8 +473,23 @@ const TEXT = {
       cta1: "My Edge", cta2: "Let's talk",
     },
     about: [
-      "I'm Malachi Mirvis, from Be'er Sheva, Israel. I live where AI meets software development, and I love taking an idea and bringing it to life.",
-      "I'm open to work in the Haifa area, on-site, hybrid or remote, and happy to hear about interesting roles and projects.",
+      { h: "A bit about me" },
+      { p: "I'm a multidisciplinary person with a deep curiosity for technology and a natural drive to explore, take apart and understand complex systems." },
+      { p: "I'm self-taught at heart: much of what I know I learned on my own, through research, hands-on experience and intensive learning. I learn fast, I love diving into new fields, and a surface-level understanding is never enough for me. I want to understand not only how technology works, but also what's behind it, how it can be improved and how it can be used to create new things." },
+      { p: "Today I'm studying Computer Science and Management at the Open University of Israel, while independently going deeper into a wide range of technical fields." },
+      { h: "Areas of knowledge & interest" },
+      { ul: [
+        ["Programming & development", "programming languages, software development, scripting and problem solving."],
+        ["Computer networks", "network architecture, communication protocols and infrastructure."],
+        ["Cyber security", "information security, vulnerability research, offensive and defensive security."],
+        ["Blockchain & Web3", "distributed systems, protocols, smart contracts and the crypto ecosystem."],
+        ["Cryptography", "encryption mechanisms, digital signatures and the foundations of information security."],
+        ["Artificial intelligence", "language models, AI agents, automation and integrating intelligent systems."],
+      ] },
+      { h: "How I approach things" },
+      { p: "I especially enjoy connecting different worlds. Whether it's technology, software, information security, financial systems or new ideas, I love to learn, explore, spot opportunities and figure out how to turn an idea into something that actually works." },
+      { p: "To me, knowledge isn't static. Every new field is a chance to understand something more about the world and connect it to what I've already learned." },
+      { end: "Yes, yes, just like AI" },
     ],
     edgeLead: "What I bring to every team and project:",
     edge: [
@@ -487,7 +535,11 @@ function render(lang) {
   document.querySelectorAll("[data-k]").forEach(el => { el.textContent = get(t, el.dataset.k); });
   document.getElementById("langBtn").textContent = t.langBtn;
 
-  document.getElementById("aboutText").innerHTML = t.about.map(p => `<p>${esc(p)}</p>`).join("");
+  document.getElementById("aboutText").innerHTML = t.about.map(b =>
+    b.h ? `<h3>${esc(b.h)}</h3>` :
+    b.ul ? `<ul class="about-list">${b.ul.map(([k, d]) => `<li><b>${esc(k)}</b><span> – ${esc(d)}</span></li>`).join("")}</ul>` :
+    b.end ? `<p class="about-end mono">${esc(b.end)}</p>` :
+    `<p>${esc(b.p)}</p>`).join("");
   document.getElementById("avatar").innerHTML = PROFILE.photo
     ? `<img src="${esc(PROFILE.photo)}" alt="${esc(t.hero.name)}">`
     : esc(PROFILE.initials);
@@ -875,7 +927,7 @@ const TOOLS = [
 
   const SELECTORS = [
     ".hero .tag", "h1 .name", "h1 .role", ".hero .lead",
-    "section h2 > span", "#aboutText p", ".edge-lead", ".edge .k", ".edge h3", ".edge p",
+    "section h2 > span", "#aboutText p", "#aboutText h3", "#aboutText li > b", "#aboutText li > span", ".edge-lead", ".edge .k", ".edge h3", ".edge p",
     ".contact p", "footer .wrap > span[data-k]",
   ];
   let blocks = [], uid = 0;
