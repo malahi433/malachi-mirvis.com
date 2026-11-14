@@ -15,7 +15,8 @@
 <meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600;800&family=Secular+One&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet">
+<script>try { if (localStorage.getItem("theme") === "light") document.documentElement.dataset.theme = "light"; } catch (e) {}</script>
 <style>
   :root {
     /* צבעי המותג */
@@ -29,8 +30,27 @@
     --line: #15222f;
     --text: #e8f0f7;
     --muted: #8a9aab;
+    --nav-bg: rgba(5,8,13,.82);
+    --net: 190,205,225;   /* צבע רשת הנוירונים */
     --radius: 14px;
   }
+  /* ===== מצב בהיר ===== */
+  :root[data-theme="light"] {
+    --green: #00a35c;
+    --blue: #1f6fe5;
+    --red: #e0284d;
+    --bg: #f4f7fb;
+    --bg-2: #e9eef6;
+    --card: #ffffff;
+    --line: #d9e1eb;
+    --text: #0d1726;
+    --muted: #56677c;
+    --nav-bg: rgba(244,247,251,.85);
+    --net: 70,92,125;
+  }
+  /* מעבר בין המצבים: עיגול שמתפשט מהכפתור (View Transitions) */
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
@@ -83,7 +103,7 @@
   /* Nav */
   nav {
     position: sticky; top: 0; z-index: 10;
-    background: rgba(5,8,13,.82); backdrop-filter: blur(10px);
+    background: var(--nav-bg); backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
   }
   nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
@@ -96,6 +116,21 @@
     padding: 6px 14px; border-radius: 999px; cursor: pointer; font: inherit; font-size: .85rem;
   }
   .lang:hover { border-color: var(--blue); color: var(--blue); }
+  .nav-tools { display: flex; align-items: center; gap: 10px; }
+  .theme-btn {
+    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+    transition: border-color .2s, box-shadow .3s, color .2s;
+  }
+  .theme-btn:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 18px color-mix(in srgb, var(--green) 35%, transparent); }
+  .theme-btn svg { width: 22px; height: 22px; overflow: visible; }
+  .theme-btn .core { transform-origin: 12px 12px; transition: transform .6s cubic-bezier(.5,1.6,.4,1); }
+  .theme-btn .cut  { transition: transform .6s cubic-bezier(.5,1.6,.4,1); }
+  .theme-btn .rays { transform-origin: 12px 12px; transition: transform .6s cubic-bezier(.5,1.6,.4,1), opacity .4s; }
+  /* כהה = ירח: העיגול גדל, עיגול "חותך" נכנס ויוצר סהר, והקרניים נעלמות */
+  :root:not([data-theme="light"]) .theme-btn .core { transform: scale(1.7); }
+  :root:not([data-theme="light"]) .theme-btn .cut  { transform: translate(-12px, 5px); }
+  :root:not([data-theme="light"]) .theme-btn .rays { transform: rotate(-90deg) scale(.4); opacity: 0; }
 
   /* Hero */
   header.hero { padding: 110px 0 90px; }
@@ -125,7 +160,11 @@
   [dir="rtl"] h2::after { background: linear-gradient(270deg, var(--green), var(--blue), var(--red)); }
   .about { display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start; }
   .about p { color: var(--muted); margin-bottom: 14px; }
-  .about h3 { font-size: 1.2rem; font-weight: 800; color: var(--text); margin: 26px 0 10px; }
+  /* גופנים באזור "עליי": Secular One לכותרות ולשמות התחומים, Frank Ruhl Libre (סריף) לטקסט */
+  .about p, .about-list li { font-family: "Frank Ruhl Libre", "Heebo", serif; font-size: 1.12rem; line-height: 1.85; }
+  .about-list b { font-family: "Secular One", "Heebo", sans-serif; font-weight: 400; letter-spacing: .01em; }
+  .about h3 { font-family: "Secular One", "Heebo", sans-serif; font-weight: 400; font-size: 1.45rem; letter-spacing: .01em;
+              color: var(--text); margin: 26px 0 10px; }
   .about h3:first-child { margin-top: 0; }
   .about h3::before {
     content: ""; display: inline-block; width: 4px; height: 1.05em; vertical-align: -0.15em;
@@ -140,7 +179,7 @@
   .about-list li:nth-child(3n+2) { --c: var(--blue); }
   .about-list li:nth-child(3n) { --c: var(--red); }
   .about-list b { color: var(--c); font-weight: 700; }
-  .about p.about-end { color: var(--green); font-weight: 700; margin-top: 18px; text-shadow: 0 0 12px rgba(0,230,118,.45); }
+  .about p.about-end { font-family: "JetBrains Mono", monospace; font-size: 1rem; color: var(--green); font-weight: 700; margin-top: 18px; text-shadow: 0 0 12px rgba(0,230,118,.45); }
   .about-end::before { content: "> "; color: var(--red); }
   .avatar {
     aspect-ratio: 1; border-radius: var(--radius); border: 1px solid var(--line);
@@ -177,6 +216,7 @@
 
   /* רשת הנוירונים ברקע ושובל ה-0/1 של העכבר */
   #neural { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+  :root[data-theme="light"] #neural { opacity: .5; }   /* ברקע בהיר הרשת עדינה יותר, כדי שהטקסט יבלוט */
   #trail { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 60; pointer-events: none; }
   .edge .k { font: 800 .8rem "JetBrains Mono", monospace; color: var(--c); letter-spacing: .08em; direction: ltr; unicode-bidi: isolate; }
   [dir="rtl"] .edge .k { text-align: right; }
@@ -243,7 +283,7 @@
   .bubble.grab { cursor: grabbing; }
   .bubble img { width: 40%; height: 40%; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
   .bubble span {
-    font: 600 12px "JetBrains Mono", monospace; color: var(--text); opacity: .85; white-space: nowrap;
+    font: 600 12px "JetBrains Mono", monospace; color: #e8f0f7; opacity: .85; white-space: nowrap;
     pointer-events: none; direction: ltr;
   }
   .bubble.s span { font-size: 9.5px; }
@@ -251,6 +291,10 @@
   .bubble.nolabel span { display: none; }
   .bubble.nolabel img { width: 52%; height: 52%; }
   @media (max-width: 760px) { .bubbles { height: 720px; } .bubble span { font-size: 9px; } }
+
+  /* במצב בהיר הבועות נשארות כהות (כדי שהלוגואים הלבנים ייראו), וכך גם אריחי האייקונים */
+  :root[data-theme="light"] .icons a { background: #0d1520; border-color: #0d1520; }
+  :root[data-theme="light"] .bubble { box-shadow: 0 6px 20px rgba(13,23,38,.25), 0 0 22px color-mix(in srgb, var(--c) 25%, transparent); }
 
   /* אייקונים */
   .icons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -321,7 +365,21 @@
       <a href="#projects" data-k="nav.projects"></a>
       <a href="#contact" data-k="nav.contact"></a>
     </div>
-    <button class="lang mono" id="langBtn"></button>
+    <div class="nav-tools">
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="מצב בהיר / כהה" title="מצב בהיר / כהה">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <mask id="moonCut"><rect x="-12" y="-12" width="48" height="48" fill="#fff"/><circle class="cut" cx="31" cy="3" r="6" fill="#000"/></mask>
+          <circle class="core" cx="12" cy="12" r="5" fill="currentColor" mask="url(#moonCut)"/>
+          <g class="rays" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="1.5" x2="12" y2="3.5"/><line x1="12" y1="20.5" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.5" y2="12"/><line x1="20.5" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6" y2="6"/><line x1="18" y1="18" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6" y2="18"/><line x1="18" y1="6" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+      <button class="lang mono" id="langBtn"></button>
+    </div>
   </div>
 </nav>
 
@@ -587,6 +645,33 @@ document.getElementById("langBtn").onclick = () => {
   render(lang);
 };
 
+/* ===== כפתור מצב בהיר/כהה: הצבע החדש מתפשט מהכפתור כעיגול שגדל עד שהוא מכסה את כל המסך ===== */
+(function themeToggle() {
+  const btn = document.getElementById("themeBtn");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  function apply(t) {
+    if (t === "light") document.documentElement.dataset.theme = "light";
+    else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem("theme", t); } catch (e) {}
+    meta.setAttribute("content", t === "light" ? "#f4f7fb" : "#05080d");
+    window.dispatchEvent(new Event("themechange"));
+  }
+  btn.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    const r = btn.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const end = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return apply(next);
+    const tr = document.startViewTransition(() => apply(next));
+    tr.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`] },
+        { duration: 700, easing: "cubic-bezier(.7,0,.3,1)", pseudoElement: "::view-transition-new(root)" });
+    });
+  });
+  if (document.documentElement.dataset.theme === "light") meta.setAttribute("content", "#f4f7fb");
+})();
+
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: .1 });
 document.querySelectorAll(".reveal").forEach(el => io.observe(el));
 
@@ -784,7 +869,10 @@ const TOOLS = [
 (function neural() {
   const cv = document.getElementById("neural"), ctx = cv.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const COLORS = ["190,205,225"];   // צבע אחד ניטרלי (כסוף), בלי ערבוב צבעים
+  // צבע אחד ניטרלי, לפי המצב (כהה/בהיר)
+  const netColor = () => getComputedStyle(document.documentElement).getPropertyValue("--net").trim() || "190,205,225";
+  let NET = netColor();
+  addEventListener("themechange", () => { NET = netColor(); nodes.forEach(n => { n.c = NET; }); });
   const LINK = 175, LINK2 = LINK * LINK;   // מרחק מרבי לקו בין שתי נקודות
   const BUCKETS = 6;                        // קווים מקובצים לפי צבע ושקיפות, כדי לצייר מאות קווים בלי להאט
   let W, H, nodes = [], pulses = [], mouse = { x: -9999, y: -9999 };
@@ -797,7 +885,7 @@ const TOOLS = [
     while (nodes.length < want) nodes.push({
       x: Math.random() * W, y: Math.random() * H,
       vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25,
-      r: .9 + Math.random() * 1.3, c: COLORS[Math.floor(Math.random() * COLORS.length)], nb: [],
+      r: .9 + Math.random() * 1.3, c: NET, nb: [],
     });
     nodes.length = want;
   }
@@ -846,7 +934,7 @@ const TOOLS = [
       const d = Math.hypot(mouse.x - n.x, mouse.y - n.y);
       if (d < 210) { mp.moveTo(mouse.x, mouse.y); mp.lineTo(n.x, n.y); }
     }
-    ctx.strokeStyle = "rgba(190,205,225,.28)"; ctx.stroke(mp);
+    ctx.strokeStyle = `rgba(${NET},.28)`; ctx.stroke(mp);
     // הנקודות: נקודה עם יותר חיבורים גדולה ובוהקת יותר (צומת)
     for (const n of nodes) {
       const k = n.nb.length, r = n.r + Math.min(2.2, k * 0.22);
@@ -909,7 +997,8 @@ const TOOLS = [
       if (Math.random() < 0.08) b.ch = b.ch === "0" ? "1" : "0";
       ctx.font = `700 ${b.size}px "JetBrains Mono", monospace`;
       ctx.shadowColor = "rgba(0,230,118,.9)"; ctx.shadowBlur = 8;
-      ctx.fillStyle = b.life > .8 ? `rgba(200,255,224,${b.life})` : `rgba(0,230,118,${b.life})`;
+      const light = document.documentElement.dataset.theme === "light";
+      ctx.fillStyle = b.life > .8 ? (light ? `rgba(0,110,60,${b.life})` : `rgba(200,255,224,${b.life})`) : (light ? `rgba(0,163,92,${b.life})` : `rgba(0,230,118,${b.life})`);
       ctx.fillText(b.ch, b.x, b.y);
       return true;
     });
