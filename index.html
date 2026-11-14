@@ -268,7 +268,7 @@
   footer .icons { margin-bottom: 22px; }
   footer .brandline { height: 3px; width: 120px; margin: 0 auto 18px; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--blue), var(--red)); }
 
-  /* ===== טקסט שמתפרק למטריקס בגלילה ===== */
+  /* ===== פענוח הכותרת בכניסה לאתר ===== */
   .mx-w { white-space: nowrap; }                 /* מילה שלמה לא נשברת באמצע */
   .mx { position: relative; }
   /* הספרה 0/1 שמחליפה את האות. קיימת רק בזמן ההתפרקות, כדי לא לשבש את סדר הטקסט במנוחה */
@@ -585,7 +585,6 @@ document.getElementById("langBtn").onclick = () => {
   lang = lang === "he" ? "en" : "he";
   try { localStorage.setItem("lang", lang); } catch (e) {}
   render(lang);
-  if (window.__mx) window.__mx.rebuild();   // הטקסט החדש מתפרק גם הוא
 };
 
 const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), { threshold: .1 });
@@ -785,13 +784,13 @@ const TOOLS = [
 (function neural() {
   const cv = document.getElementById("neural"), ctx = cv.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const COLORS = ["0,230,118", "47,128,255", "47,128,255", "0,230,118", "255,46,85"];
+  const COLORS = ["190,205,225"];   // צבע אחד ניטרלי (כסוף), בלי ערבוב צבעים
   const LINK = 175, LINK2 = LINK * LINK;   // מרחק מרבי לקו בין שתי נקודות
   const BUCKETS = 6;                        // קווים מקובצים לפי צבע ושקיפות, כדי לצייר מאות קווים בלי להאט
   let W, H, nodes = [], pulses = [], mouse = { x: -9999, y: -9999 };
 
   function resize() {
-    const dpr = Math.min(2, devicePixelRatio || 1);
+    const dpr = Math.min(1.25, devicePixelRatio || 1);   // רזולוציה מוגבלת לרקע: פחות פיקסלים לצייר, האתר מהיר יותר
     W = innerWidth; H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const want = Math.max(70, Math.min(240, Math.round(W * H / 6500)));   // רשת צפופה: בערך פי 2.5 נקודות
@@ -847,14 +846,14 @@ const TOOLS = [
       const d = Math.hypot(mouse.x - n.x, mouse.y - n.y);
       if (d < 210) { mp.moveTo(mouse.x, mouse.y); mp.lineTo(n.x, n.y); }
     }
-    ctx.strokeStyle = "rgba(0,230,118,.28)"; ctx.stroke(mp);
+    ctx.strokeStyle = "rgba(190,205,225,.28)"; ctx.stroke(mp);
     // הנקודות: נקודה עם יותר חיבורים גדולה ובוהקת יותר (צומת)
     for (const n of nodes) {
       const k = n.nb.length, r = n.r + Math.min(2.2, k * 0.22);
-      ctx.fillStyle = `rgba(${n.c},${Math.min(.95, .45 + k * .06).toFixed(2)})`;
+      ctx.fillStyle = `rgba(${n.c},${Math.min(.6, .28 + k * .04).toFixed(2)})`;
       ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.fill();
       if (k >= 7) {   // צומת מרכזי: הילה עדינה
-        ctx.fillStyle = `rgba(${n.c},.08)`;
+        ctx.fillStyle = `rgba(${n.c},.05)`;
         ctx.beginPath(); ctx.arc(n.x, n.y, r * 3.2, 0, Math.PI * 2); ctx.fill();
       }
     }
@@ -943,35 +942,18 @@ const TOOLS = [
   document.addEventListener("pointerleave", () => document.querySelectorAll(".edge .item.tilt").forEach(reset));
 })();
 
-/* ===== טקסט שמתפרק ל-0 ו-1 בגלילה למטה, ומתחבר בחזרה בגלילה למעלה =====
-   האנימציה תלויה רק במיקום הגלילה, לא בזמן: כל מיקום נראה תמיד אותו דבר,
-   ולכן גלילה למעלה מריצה בדיוק את אותה אנימציה הפוך. כל שורה מתפרקת
-   כשהיא מגיעה לחלק העליון של המסך. */
-(function matrixText() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-  const SELECTORS = [
-    ".hero .tag", "h1 .name", "h1 .role", ".hero .lead",
-    "section h2 > span", "#aboutText p", "#aboutText h3", "#aboutText li > b", "#aboutText li > span", ".edge-lead", ".edge .k", ".edge h3", ".edge p",
-    ".contact p", "footer .wrap > span[data-k]",
-  ];
-  let blocks = [], uid = 0;
-
-  // מספר "אקראי" קבוע לכל אות, כדי שהאנימציה תהיה זהה בכל פעם
-  function hash(a, b) {
-    let h = Math.imul(a, 374761393) + Math.imul(b, 668265263) | 0;
-    h = Math.imul(h ^ (h >>> 13), 1274126177);
-    return (h ^ (h >>> 16)) >>> 0;
-  }
-
-  function split(el) {
-    if (el.querySelector(".mx")) return null;
-    // טקסט בגרדיאנט (השם): הגרדיאנט עובר לכל אות בנפרד
-    const cs = getComputedStyle(el);
-    if (!el.dataset.grad && (cs.webkitBackgroundClip === "text" || cs.backgroundClip === "text")) el.dataset.grad = cs.backgroundImage;
-    const grad = el.dataset.grad;
-    if (grad) el.style.backgroundImage = "none";
+/* ===== פענוח הכותרת: בזמן מסך הפתיחה, השם והתפקיד מוסתרים מאחורי 0 ו-1 מהבהבים.
+   כשמסך הפתיחה נסגר, כל אות "מפוענחת" בתורה, לפי סדר הקריאה.
+   רץ פעם אחת בכניסה לאתר, ובסופו הכותרת חוזרת להיות טקסט רגיל. ===== */
+(function decodeTitle() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches || !document.getElementById("intro")) return;
+  const els = [...document.querySelectorAll(".hero .tag, h1 .name, h1 .role")];
+  const rnd = () => (Math.random() < .5 ? "0" : "1");
+  const blocks = els.map(el => {
     const text = el.textContent;
+    // טקסט בגרדיאנט (השם): הגרדיאנט עובר זמנית לכל אות
+    const cs = getComputedStyle(el);
+    const grad = (cs.webkitBackgroundClip === "text" || cs.backgroundClip === "text") ? cs.backgroundImage : "";
     el.textContent = "";
     const chars = [];
     for (const tok of text.split(/(\s+)/)) {
@@ -980,120 +962,43 @@ const TOOLS = [
       const w = document.createElement("span"); w.className = "mx-w";
       for (const ch of Array.from(tok)) {
         const s = document.createElement("span"); s.className = "mx";
-        const o = document.createElement("span"); o.className = "o"; o.textContent = ch;
-        if (grad) { o.style.backgroundImage = grad; o.style.webkitBackgroundClip = o.style.backgroundClip = "text"; o.style.color = "transparent"; }
+        const o = document.createElement("span"); o.textContent = ch; o.style.opacity = "0";
         s.appendChild(o); w.appendChild(s);
-        const i = uid++;
-        chars.push({ s, o, i, j: (hash(i, 7) % 1000) / 1000 * 0.45, y: 0, last: -1, g: "" });
+        s.setAttribute("data-g", rnd()); s.style.setProperty("--go", ".9");
+        chars.push({ s, o });
       }
       el.appendChild(w);
     }
-    return { el, grad, chars, top: 0, bottom: 0 };
-  }
-
-  // מיקום כל אות בעמוד (נמדד פעם אחת, ושוב כשהגודל משתנה)
-  function measure() {
-    for (const b of blocks) {
-      const r = b.el.getBoundingClientRect();
-      b.top = r.top + scrollY; b.bottom = r.bottom + scrollY;
-      for (const c of b.chars) {
+    if (grad) {
+      el.style.backgroundImage = "none";
+      const r = el.getBoundingClientRect();
+      chars.forEach(c => {
         const cr = c.s.getBoundingClientRect();
-        c.y = cr.top + scrollY + cr.height / 2;
-        if (b.grad) { c.o.style.backgroundSize = r.width + "px 100%"; c.o.style.backgroundPosition = -(cr.left - r.left) + "px 0"; }
-      }
+        Object.assign(c.o.style, { backgroundImage: grad, backgroundSize: r.width + "px 100%",
+          backgroundPosition: -(cr.left - r.left) + "px 0", webkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" });
+      });
     }
-    update(true);
-  }
+    return { el, text, grad, chars };
+  });
+  const all = blocks.flatMap(b => b.chars);
+  const flicker = setInterval(() => all.forEach(c => { if (!c.done) c.s.setAttribute("data-g", rnd()); }), 70);
 
-  function update(force) {
-    const vh = innerHeight, nav = 64;
-    const range = Math.max(140, vh * 0.24);
-    const start = nav + range;
-    const shift = Math.max(0, 140 - scrollY);   // בראש העמוד שום דבר לא מתפרק
-    for (const b of blocks) {
-      if (b.decoding) continue;   // הכותרת באמצע אנימציית הפענוח
-      if (!force && (b.bottom - scrollY < -60 || b.top - scrollY > vh)) continue;
-      for (const c of b.chars) {
-        const y = c.y - scrollY + shift;
-        let k = ((start - y) / range - c.j) / 0.55;
-        k = k <= 0 ? 0 : k >= 1 ? 1 : Math.round(k * 200) / 200;
-        if (k === c.last) continue;
-        c.last = k;
-        if (k === 0) {                           // האות המקורית, שלמה
-          c.o.style.opacity = "";
-          if (c.g) { c.s.removeAttribute("data-g"); c.g = ""; }
-          c.s.style.removeProperty("--go"); c.s.style.removeProperty("--gy");
-          continue;
-        }
-        const fade = Math.min(1, k / 0.28);
-        c.o.style.opacity = (1 - fade * fade * (3 - 2 * fade)).toFixed(3);   // האות נעלמת
-        const g = (hash(c.i, Math.floor(k * 14)) & 1) ? "1" : "0";            // הספרה מהבהבת לפי ההתקדמות
-        if (g !== c.g) { c.s.setAttribute("data-g", g); c.g = g; }
-        const go = k < 0.25 ? k / 0.25 : 1 - (k - 0.25) / 0.75;              // הספרה מופיעה ואז דועכת
-        c.s.style.setProperty("--go", go.toFixed(3));
-        c.s.style.setProperty("--gy", (Math.max(0, k - 0.15) * 2.4).toFixed(3) + "em");   // ונופלת כמו גשם
+  addEventListener("introdone", () => {
+    const t0 = performance.now();
+    blocks.forEach((b, bi) => b.chars.forEach((c, i) => { c.at = 250 + bi * 380 + i * 75 + Math.random() * 260; }));
+    (function step() {
+      const t = performance.now() - t0; let left = 0;
+      for (const c of all) {
+        if (c.done) continue;
+        if (t < c.at) { left++; continue; }
+        c.done = true; c.s.removeAttribute("data-g"); c.o.style.opacity = "";
       }
-    }
-  }
-
-  const done = new WeakMap();   // טקסט שכבר פורק לאותיות ולא השתנה
-  function build() {
-    blocks = [];
-    document.querySelectorAll(SELECTORS.join(",")).forEach(el => {
-      if (!el.offsetParent) return;   // אזור מוסתר
-      const b = el.querySelector(".mx") ? done.get(el) : split(el);
-      if (b) { done.set(el, b); blocks.push(b); }
-    });
-    measure();
-  }
-
-  let ticking = false;
-  addEventListener("scroll", () => {
-    if (ticking) return; ticking = true;
-    requestAnimationFrame(() => { ticking = false; update(false); });
-  }, { passive: true });
-  let rt; const remeasure = () => { clearTimeout(rt); rt = setTimeout(measure, 120); };
-  addEventListener("resize", remeasure);
-  new ResizeObserver(remeasure).observe(document.body);
-  if (document.fonts) document.fonts.ready.then(remeasure);
-  document.addEventListener("transitionend", e => { if (e.target.classList && e.target.classList.contains("reveal")) remeasure(); });
-
-  build();
-  window.__mx = { rebuild: build };   // אחרי החלפת שפה
-
-  /* פענוח הכותרת: בזמן מסך הפתיחה, השם והתפקיד מוסתרים מאחורי 0 ו-1 מהבהבים.
-     כשמסך הפתיחה נסגר, כל אות "מפוענחת" בתורה, לפי סדר הקריאה. */
-  if (document.getElementById("intro")) {
-    const DECODE = [".hero .tag", "h1 .name", "h1 .role"];
-    const dblocks = blocks.filter(b => DECODE.some(s => b.el.matches(s)));
-    const all = dblocks.flatMap(b => b.chars);
-    const rnd = () => (Math.random() < .5 ? "0" : "1");
-    dblocks.forEach(b => { b.decoding = true; });
-    all.forEach(c => {
-      c.o.style.opacity = "0";
-      c.s.setAttribute("data-g", rnd());
-      c.s.style.setProperty("--go", ".9"); c.s.style.setProperty("--gy", "0em");
-    });
-    const flicker = setInterval(() => all.forEach(c => { if (!c.done) c.s.setAttribute("data-g", rnd()); }), 70);
-    addEventListener("introdone", () => {
-      const t0 = performance.now();
-      dblocks.forEach((b, bi) => b.chars.forEach((c, i) => { c.at = 250 + bi * 380 + i * 75 + Math.random() * 260; }));
-      (function step() {
-        const t = performance.now() - t0; let left = 0;
-        for (const c of all) {
-          if (c.done) continue;
-          if (t < c.at) { left++; continue; }
-          c.done = true; c.g = ""; c.last = 0;
-          c.s.removeAttribute("data-g"); c.s.style.removeProperty("--go"); c.s.style.removeProperty("--gy");
-          c.o.style.opacity = "";
-        }
-        if (left) return requestAnimationFrame(step);
-        clearInterval(flicker);
-        dblocks.forEach(b => { b.decoding = false; });
-        update(true);
-      })();
-    }, { once: true });
-  }
+      if (left) return requestAnimationFrame(step);
+      clearInterval(flicker);
+      // הפענוח הסתיים: הכותרת חוזרת להיות טקסט רגיל
+      blocks.forEach(b => { b.el.textContent = b.text; if (b.grad) b.el.style.backgroundImage = ""; });
+    })();
+  }, { once: true });
 })();
 
 /* ===== אנימציית פתיחה: 0 ו-1 ירוקים יורדים מלמעלה למטה ===== */
