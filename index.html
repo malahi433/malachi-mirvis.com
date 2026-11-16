@@ -22,7 +22,7 @@
     /* צבעי המותג */
     --green: #00e676;
     --blue: #2f80ff;
-    --red: #ff2e55;
+    --purple: #a855f7;
 
     --bg: #05080d;
     --bg-2: #0b1119;
@@ -38,7 +38,7 @@
   :root[data-theme="light"] {
     --green: #00a35c;
     --blue: #1f6fe5;
-    --red: #e0284d;
+    --purple: #7c3aed;
     --bg: #f4f7fb;
     --bg-2: #e9eef6;
     --card: #ffffff;
@@ -71,7 +71,7 @@
   .mono { font-family: "JetBrains Mono", monospace; }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
   a { color: inherit; text-decoration: none; }
-  .g { color: var(--green); } .b { color: var(--blue); } .r { color: var(--red); }
+  .g { color: var(--green); } .b { color: var(--blue); } .r { color: var(--purple); }
 
   /* ===== אנימציית פתיחה ===== */
   #intro {
@@ -108,7 +108,7 @@
   }
   nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
   .logo { font-weight: 800; color: var(--green); direction: ltr; unicode-bidi: isolate; display: inline-block; }
-  .logo .r { color: var(--red); }
+  .logo .r { color: var(--purple); }
   .links { display: flex; gap: 22px; font-size: .95rem; color: var(--muted); }
   .links a:hover { color: var(--blue); }
   .lang {
@@ -134,14 +134,14 @@
 
   /* Hero */
   header.hero { padding: 110px 0 90px; }
-  .tag { color: var(--red); font-size: .9rem; margin-bottom: 14px; }
+  .tag { color: var(--purple); font-size: .9rem; margin-bottom: 14px; }
   h1 { font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 800; line-height: 1.15; }
   h1 .name {
     background: linear-gradient(90deg, var(--green), var(--blue));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   h1 .role { display: block; font-size: .55em; font-weight: 600; color: var(--text); margin-top: 10px; }
-  h1 .role::before { content: "> "; color: var(--red); font-family: "JetBrains Mono", monospace; }
+  h1 .role::before { content: "> "; color: var(--purple); font-family: "JetBrains Mono", monospace; }
   .hero p.lead { color: var(--muted); font-size: 1.2rem; max-width: 620px; margin: 20px 0 34px; }
   .btns { display: flex; gap: 12px; flex-wrap: wrap; }
   .btn {
@@ -155,9 +155,9 @@
   /* Sections */
   section { padding: 70px 0; }
   h2 { font-size: 1.8rem; margin-bottom: 28px; display: flex; align-items: center; gap: 12px; }
-  h2 .num { color: var(--red); font-size: 1rem; }
-  h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--green), var(--blue), var(--red)); opacity: .45; }
-  [dir="rtl"] h2::after { background: linear-gradient(270deg, var(--green), var(--blue), var(--red)); }
+  h2 .num { color: var(--purple); font-size: 1rem; }
+  h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--green), var(--blue), var(--purple)); opacity: .45; }
+  [dir="rtl"] h2::after { background: linear-gradient(270deg, var(--green), var(--blue), var(--purple)); }
   .about { display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start; }
   .about p { color: var(--muted); margin-bottom: 14px; }
   /* גופנים באזור "עליי": Secular One לכותרות ולשמות התחומים, Frank Ruhl Libre (סריף) לטקסט */
@@ -177,15 +177,15 @@
     background: var(--card); border: 1px solid var(--line); border-inline-start: 3px solid var(--c);
   }
   .about-list li:nth-child(3n+2) { --c: var(--blue); }
-  .about-list li:nth-child(3n) { --c: var(--red); }
+  .about-list li:nth-child(3n) { --c: var(--purple); }
   .about-list b { color: var(--c); font-weight: 700; }
   .about p.about-end { font-family: "JetBrains Mono", monospace; font-size: 1rem; color: var(--green); font-weight: 700; margin-top: 18px; text-shadow: 0 0 12px rgba(0,230,118,.45); }
-  .about-end::before { content: "> "; color: var(--red); }
+  .about-end::before { content: "> "; color: var(--purple); }
   .avatar {
     aspect-ratio: 1; border-radius: var(--radius); border: 1px solid var(--line);
     background:
       radial-gradient(circle at 30% 20%, rgba(0,230,118,.18), transparent 60%),
-      radial-gradient(circle at 80% 90%, rgba(255,46,85,.15), transparent 55%),
+      radial-gradient(circle at 80% 90%, rgba(168,85,247,.15), transparent 55%),
       linear-gradient(135deg, var(--card), var(--bg-2));
     display: grid; place-items: center; font: 800 4rem "JetBrains Mono", monospace; color: var(--green);
     text-shadow: 0 0 20px rgba(0,230,118,.5);
@@ -227,7 +227,7 @@
 
   .skills { display: flex; flex-wrap: wrap; gap: 10px; }
   .chip { padding: 8px 16px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: .9rem; }
-  .chip:nth-child(3n+1) { color: var(--green); } .chip:nth-child(3n+2) { color: var(--blue); } .chip:nth-child(3n) { color: var(--red); }
+  .chip:nth-child(3n+1) { color: var(--green); } .chip:nth-child(3n+2) { color: var(--blue); } .chip:nth-child(3n) { color: var(--purple); }
 
   .timeline { border-inline-start: 2px solid var(--line); padding-inline-start: 24px; }
   .job { position: relative; margin-bottom: 34px; }
@@ -236,7 +236,7 @@
     width: 12px; height: 12px; border-radius: 50%; background: var(--green);
     box-shadow: 0 0 0 4px rgba(0,230,118,.15);
   }
-  .job .when { color: var(--red); font-size: .85rem; }
+  .job .when { color: var(--purple); font-size: .85rem; }
   .job h3 { font-size: 1.15rem; }
   .job .where { color: var(--blue); }
   .job p { color: var(--muted); }
@@ -262,7 +262,7 @@
     background:
       radial-gradient(ellipse at 20% 0%, rgba(0,230,118,.07), transparent 55%),
       radial-gradient(ellipse at 85% 100%, rgba(47,128,255,.08), transparent 55%),
-      radial-gradient(ellipse at 50% 50%, rgba(255,46,85,.03), transparent 60%),
+      radial-gradient(ellipse at 50% 50%, rgba(168,85,247,.03), transparent 60%),
       var(--bg-2);
     touch-action: pan-y; user-select: none; -webkit-user-select: none;
   }
@@ -310,7 +310,7 @@
 
   footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 44px 0 36px; border-top: 1px solid var(--line); }
   footer .icons { margin-bottom: 22px; }
-  footer .brandline { height: 3px; width: 120px; margin: 0 auto 18px; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--blue), var(--red)); }
+  footer .brandline { height: 3px; width: 120px; margin: 0 auto 18px; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--blue), var(--purple)); }
 
   /* ===== פענוח הכותרת בכניסה לאתר ===== */
   .mx-w { white-space: nowrap; }                 /* מילה שלמה לא נשברת באמצע */
@@ -601,7 +601,7 @@ function render(lang) {
   document.getElementById("avatar").innerHTML = PROFILE.photo
     ? `<img src="${esc(PROFILE.photo)}" alt="${esc(t.hero.name)}">`
     : esc(PROFILE.initials);
-  const edgeColors = ["var(--green)", "var(--blue)", "var(--red)", "var(--green)"];
+  const edgeColors = ["var(--green)", "var(--blue)", "var(--purple)", "var(--green)"];
   document.getElementById("edgeList").innerHTML = t.edge.map((e, i) => `
     <div class="item" style="--c:${edgeColors[i % 4]}">
       <div class="k">${esc(e.k)}</div>
